@@ -1,0 +1,79 @@
+[
+  {
+    "id": "N1",
+    "hazard": "The heater stays on until the room overheats",
+    "severity": "critical",
+    "caused_by": ["mcu", "actuator"],
+    "detection": "temperature above the hard limit for more than 30 s, or heater commanded on for longer than its maximum on-time",
+    "guarded_by": ["sensor", "mcu"],
+    "response": "open the heater relay, latch the fault until a person clears it, and sound the local buzzer",
+    "response_depends_on": ["mcu", "actuator", "power"],
+    "test": "bench: short the relay driver on; the watchdog path must open the relay within 30 s"
+  },
+  {
+    "id": "N2",
+    "hazard": "A sensor fails and the controller keeps acting on its last value",
+    "severity": "critical",
+    "caused_by": ["sensor"],
+    "detection": "no valid reading for 3 consecutive periods, a CRC error, or a value outside the physical range",
+    "guarded_by": ["mcu"],
+    "response": "switch every actuator to its safe state and raise an error alarm",
+    "response_depends_on": ["mcu", "actuator"],
+    "test": "unplug the sensor while the heater is on; the heater must be off within 3 periods"
+  },
+  {
+    "id": "N3",
+    "hazard": "The farmer believes the system is fine while it has been silent for an hour",
+    "severity": "major",
+    "caused_by": ["network", "power", "mcu"],
+    "detection": "cloud side: no status write from the device for 10 min",
+    "guarded_by": ["cloud"],
+    "response": "mark the device offline in the app and send a push notification",
+    "response_depends_on": ["cloud", "app", "network"],
+    "test": "pull the power at the device; the app must show 'offline' within 10 min"
+  },
+  {
+    "id": "N4",
+    "hazard": "A reboot after a power cut turns an actuator on before any reading exists",
+    "severity": "critical",
+    "caused_by": ["mcu", "power"],
+    "detection": "boot sequence itself, plus pull-down resistors on every relay driver pin so the relay board's default state at reset is off whatever the firmware does",
+    "guarded_by": ["mcu", "actuator"],
+    "response": "drive every actuator to its safe state before initialising sensors or the network",
+    "response_depends_on": ["mcu", "actuator"],
+    "test": "power-cycle 20 times with a logic analyser on the relay pins; no pin may go active before the first valid reading"
+  },
+  {
+    "id": "N5",
+    "hazard": "A setting typed in the app is applied without limits",
+    "severity": "major",
+    "caused_by": ["app", "cloud"],
+    "detection": "setting outside the allowed range or changing faster than the allowed rate",
+    "guarded_by": ["mcu"],
+    "response": "clamp the setting on the device and report the clamped value back",
+    "response_depends_on": ["mcu"],
+    "test": "write target=90 to the cloud; the device must report target=the maximum and never heat beyond it"
+  },
+  {
+    "id": "N6",
+    "hazard": "Readings are lost during a network outage",
+    "severity": "minor",
+    "caused_by": ["network"],
+    "detection": "publish fails or no acknowledgement",
+    "guarded_by": ["mcu"],
+    "response": "buffer readings locally and replay them in order after reconnecting",
+    "response_depends_on": ["mcu"],
+    "test": "block the broker for 2 h; after unblocking, the history must contain every reading with its original timestamp"
+  },
+  {
+    "id": "N7",
+    "hazard": "Anyone on the internet can change a device's settings",
+    "severity": "critical",
+    "caused_by": ["cloud"],
+    "detection": "",
+    "guarded_by": [],
+    "response": "",
+    "response_depends_on": [],
+    "test": ""
+  }
+]

@@ -1,0 +1,27 @@
+# secrets
+.env
+*.secret
+secrets.h
+secrets.json
+*.pem
+*.key
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# build output and large data
+build/
+dist/
+*.bin
+*.csv.gz
+data/*.parquet
