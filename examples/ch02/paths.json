@@ -1,0 +1,117 @@
+{
+  "fleet_sizes": [
+    1000
+  ],
+  "offline_after_misses": 10,
+  "illustrative_price_per_million_messages_usd": 1.0,
+  "paths": [
+    {
+      "name": "A: every raw reading to the cloud",
+      "link": "MQTT over TLS, Wi-Fi",
+      "link_overhead_bytes": 29,
+      "status_stream": "raw reading",
+      "streams": [
+        {
+          "name": "raw reading",
+          "topic": "farm/gh1/raw",
+          "period_s": 15,
+          "example": {
+            "ts": 1760400000,
+            "t": 27.4,
+            "h": 61.2,
+            "soil": 34,
+            "tank": 78,
+            "fan": 1,
+            "valve": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "B: status + 10-min history + events",
+      "link": "MQTT over TLS, Wi-Fi",
+      "link_overhead_bytes": 29,
+      "status_stream": "status",
+      "streams": [
+        {
+          "name": "status",
+          "topic": "farm/gh1/status",
+          "period_s": 60,
+          "example": {
+            "ts": 1760400000,
+            "t": 27.4,
+            "h": 61.2,
+            "soil": 34,
+            "tank": 78,
+            "fan": 1,
+            "valve": 0,
+            "rssi": -67
+          }
+        },
+        {
+          "name": "10-min aggregate",
+          "topic": "farm/gh1/history",
+          "period_s": 600,
+          "example": {
+            "ts": 1760400000,
+            "n": 40,
+            "t": {
+              "min": 26.9,
+              "mean": 27.3,
+              "max": 27.8
+            },
+            "h": {
+              "min": 59.0,
+              "mean": 61.0,
+              "max": 63.5
+            },
+            "fan_duty": 0.42,
+            "soil": 34,
+            "tank": 78
+          }
+        },
+        {
+          "name": "event with 60 s of context",
+          "topic": "farm/gh1/events",
+          "per_day": 10,
+          "example": {
+            "ts": 1760400000,
+            "type": "fan_on",
+            "reason": "t>28.0",
+            "ctx": [
+              27.1,
+              27.3,
+              27.4,
+              27.6,
+              27.8,
+              27.9,
+              28.1,
+              28.2,
+              28.3
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "C: 10-min binary status over LoRaWAN",
+      "link": "LoRaWAN, 200 m to the gateway",
+      "link_overhead_bytes": 13,
+      "status_stream": "status",
+      "streams": [
+        {
+          "name": "status",
+          "topic": "",
+          "period_s": 600,
+          "bytes": 11
+        },
+        {
+          "name": "event",
+          "topic": "",
+          "per_day": 10,
+          "bytes": 11
+        }
+      ]
+    }
+  ]
+}

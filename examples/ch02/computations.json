@@ -1,0 +1,118 @@
+{
+  "accepted_outage_s": 600,
+  "device_history_s": 7200,
+  "computations": [
+    {
+      "name": "Sample the sensors",
+      "critical": true,
+      "deadline_s": 15,
+      "inputs": "local",
+      "changes": "rarely",
+      "note": "feeds N2 (stale-reading detection); period set in ch. 1"
+    },
+    {
+      "name": "Validate a reading (range, CRC, staleness)",
+      "critical": true,
+      "deadline_s": 45,
+      "inputs": "local",
+      "changes": "rarely",
+      "note": "N2"
+    },
+    {
+      "name": "Safety cutoff (hard limit, max on-time, latch)",
+      "critical": true,
+      "deadline_s": 30,
+      "inputs": "local",
+      "changes": "rarely",
+      "note": "N1, N4"
+    },
+    {
+      "name": "Fan and valve hysteresis control",
+      "critical": true,
+      "deadline_s": 120,
+      "inputs": "local",
+      "changes": "rarely",
+      "note": "must keep running with the router dead (ch. 1 Rule A)"
+    },
+    {
+      "name": "Clamp a setting to its allowed range",
+      "critical": true,
+      "deadline_s": 5,
+      "inputs": "local",
+      "changes": "rarely",
+      "note": "N5; the cloud may also clamp, but the device must"
+    },
+    {
+      "name": "Drive the local display",
+      "critical": false,
+      "deadline_s": 1,
+      "inputs": "local",
+      "changes": "rarely",
+      "note": "a person standing at the box expects an instant refresh"
+    },
+    {
+      "name": "Downsample 15 s readings to 10-min min/mean/max",
+      "critical": false,
+      "deadline_s": null,
+      "inputs": "local",
+      "changes": "rarely",
+      "note": "pure bandwidth saving; it only needs the last 10 min"
+    },
+    {
+      "name": "Detect a silent device (N3)",
+      "critical": false,
+      "deadline_s": 600,
+      "inputs": "absence",
+      "changes": "rarely",
+      "note": "a device cannot report that it is not reporting"
+    },
+    {
+      "name": "Share the one outdoor sensor with both greenhouse controllers",
+      "critical": false,
+      "deadline_s": 30,
+      "inputs": "multi-device",
+      "changes": "sometimes",
+      "note": "node 3's reading is used by nodes 1 and 2 inside one control period: a local hop, not a cloud round trip"
+    },
+    {
+      "name": "Irrigation plan from the weather forecast",
+      "critical": false,
+      "deadline_s": 3600,
+      "inputs": "external",
+      "changes": "often",
+      "note": "device executes the plan under its own max-watering-time limit"
+    },
+    {
+      "name": "Drift and anomaly detection across both greenhouses",
+      "critical": false,
+      "deadline_s": null,
+      "inputs": "long-history",
+      "changes": "often",
+      "note": "needs weeks of data and a model that will be retrained"
+    },
+    {
+      "name": "Push an alert to the farmer's phone",
+      "critical": false,
+      "deadline_s": 60,
+      "inputs": "external",
+      "changes": "sometimes",
+      "note": "needs a push service; the on-device buzzer is the critical path"
+    },
+    {
+      "name": "Draw the week's history chart",
+      "critical": false,
+      "deadline_s": 2,
+      "inputs": "user",
+      "changes": "often",
+      "note": "presentation runs where the person is"
+    },
+    {
+      "name": "Choose which devices get a firmware build",
+      "critical": false,
+      "deadline_s": null,
+      "inputs": "multi-device",
+      "changes": "often",
+      "note": "the device only verifies and applies (ch. 9)"
+    }
+  ]
+}

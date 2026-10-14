@@ -9,7 +9,7 @@ Each chapter is 1 500–3 000 words with one worked example, 3–5 exercises (an
 | # | Chapter | One line |
 |---|---|---|
 | 1 | [Requirements and failure modes](ch01-requirements-and-failure-modes.md) | Write the "what must never happen" list first; a checker turns it into testable requirements. |
-| 2 | Choosing the data path | *(not yet written)* edge vs cloud, what to compute where, a decision table. |
+| 2 | [Choosing the data path](ch02-choosing-the-data-path.md) | List the computations, apply five placement rules in order, read the data path off the table; a traffic tool sizes three candidate paths. |
 | 3 | Data modelling | *(not yet written)* the telemetry record; status vs history vs events; schema evolution. |
 | 4 | Firmware architecture | *(not yet written)* tasks, rates, shared state, the single interlock. |
 | 5 | Safety layers that do not depend on the network | *(not yet written)* |
@@ -19,6 +19,27 @@ Each chapter is 1 500–3 000 words with one worked example, 3–5 exercises (an
 | 9 | Observability and OTA | *(not yet written)* |
 | 10 | Case study | *(not yet written)* the farm monitor end to end with every artefact. |
 
+## The running example's data path
+
+The farm monitor as chapters 1 and 2 leave it: two greenhouse nodes on Wi-Fi, a plot node 200 m away on LoRaWAN through a gateway, every critical computation on the device, and four streams crossing the link (status, history, events, settings).
+
+```mermaid
+flowchart LR
+    subgraph farm
+        GH1[Greenhouse node 1<br/>sensors, fan, valve] -->|status 60 s, history 10 min, events| R[Wi-Fi router]
+        GH2[Greenhouse node 2] -->|same| R
+        PL[Plot node<br/>soil, tank] -->|11-byte status / 10 min, LoRaWAN| GW[Gateway]
+        GW -->|outdoor reading, local hop| GH1
+        GW -->|translated streams| R
+    end
+    R --> CL[(Cloud: broker + database)]
+    CL -->|settings, OTA| R
+    CL --> APP[App: live view, chart, alerts]
+    CL -. offline after 10 missed status writes .-> APP
+```
+
+Each chapter adds one artefact to this picture; chapter 10 assembles them.
+
 ## Running the examples
 
 ```bash
@@ -27,6 +48,13 @@ make check          # lint, tests, and every example script
 ```
 
 Each `examples/chNN/` folder has its own README with the commands for that chapter.
+
+## Status and limitations
+
+- Chapters 1 and 2 are written; 3 to 10 are planned (see the table above).
+- Every number quoted from the two real systems comes from their READMEs, not from measurements made for this handbook; every number produced by an example script is labelled as such in the chapter.
+- The traffic figures in chapter 2 count payload, MQTT, TLS-record and LoRaWAN overhead only, not TCP/IP or radio framing, and their cost column is illustrative until chapter 8 cites real price pages.
+- The examples are standard-library Python; nothing here runs on a microcontroller. Chapters 4 and 5 will point to firmware-side counterparts in the two real repos.
 
 ## Licence
 
