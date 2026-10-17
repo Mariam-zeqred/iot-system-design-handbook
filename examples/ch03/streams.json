@@ -1,0 +1,45 @@
+{
+  "fleet_size": 1000,
+  "streams": [
+    {
+      "name": "status",
+      "mode": "overwrite",
+      "period_s": 60,
+      "example": {"schema": 2, "dev": "gh1", "ts": 1760400060, "t": 27.6, "h": 60.9, "soil": 34, "tank": 78, "fan": 1, "valve": 0, "rssi": -66, "fw": "1.4.0"}
+    },
+    {
+      "name": "history 10-min",
+      "mode": "append",
+      "period_s": 600,
+      "retention_days": 730,
+      "example": {"schema": 2, "dev": "gh1", "ts": 1760400600, "period_s": 600, "n": 40, "t": {"min": 27.0, "mean": 27.4, "max": 27.9}, "h": {"min": 58.5, "mean": 60.7, "max": 63.0}, "fan_duty": 0.45, "soil": 34, "tank": 78}
+    },
+    {
+      "name": "history 1-min (if asked)",
+      "mode": "append",
+      "period_s": 60,
+      "retention_days": 730,
+      "example": {"schema": 2, "dev": "gh1", "ts": 1760400600, "period_s": 60, "n": 4, "t": {"min": 27.0, "mean": 27.4, "max": 27.9}, "h": {"min": 58.5, "mean": 60.7, "max": 63.0}, "fan_duty": 0.45, "soil": 34, "tank": 78}
+    },
+    {
+      "name": "raw 15-s samples (path A)",
+      "mode": "append",
+      "period_s": 15,
+      "retention_days": null,
+      "example": {"schema": 2, "dev": "gh1", "ts": 1760400000, "t": 27.4, "h": 61.2, "soil": 34, "tank": 78, "fan": 1, "valve": 0}
+    },
+    {
+      "name": "events",
+      "mode": "append",
+      "per_day": 10,
+      "retention_days": null,
+      "example": {"schema": 2, "dev": "gh1", "ts": 1760403600, "id": "gh1-1760403600-limit_hit", "type": "limit_hit", "severity": "critical", "reason": "t>35.0 for 30 s; heater relay opened and latched (N1)", "ctx": [33.9, 34.2, 34.6, 34.9, 35.1, 35.3, 35.4], "ack_ts": null, "resolved_ts": null}
+    },
+    {
+      "name": "settings reported",
+      "mode": "overwrite",
+      "period_s": 86400,
+      "example": {"schema": 2, "version": 7, "ts": 1760400060, "src": "app", "t_on": 40.0, "t_off": 26.0, "h_max": 85.0, "valve_max_s": 1800, "clamped": ["t_on", "valve_max_s"]}
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"schema": 2, "dev": "gh1", "ts": 1760403600, "id": "gh1-1760403600-limit_hit", "type": "limit_hit", "severity": "critical", "reason": "t>35.0 for 30 s; heater relay opened and latched (N1)", "ctx": [33.9, 34.2, 34.6, 34.9, 35.1, 35.3, 35.4], "ack_ts": null, "resolved_ts": null}

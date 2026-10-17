@@ -1,0 +1,1 @@
+{"schema": 2, "dev": "gh1", "ts": 1760400600, "period_s": 600, "n": 40, "t": {"min": 27.0, "mean": 27.4, "max": 27.9}, "h": {"min": 58.5, "mean": 60.7, "max": 63.0}, "fan_duty": 0.45, "soil": 34, "tank": 78}
