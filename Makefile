@@ -10,6 +10,7 @@ test:
 	cd examples/ch01 && pytest -q
 	cd examples/ch02 && pytest -q
 	cd examples/ch03 && pytest -q
+	cd examples/ch04 && pytest -q
 
 # Each chapter's example must run from a clean checkout. Chapter 1's checker
 # exits 1 on purpose (N7 is left incomplete), so only its --markdown mode is
@@ -22,3 +23,7 @@ examples:
 	cd examples/ch03 && python telemetry.py decode 018507ee1b263e3ee40e75 > /dev/null
 	cd examples/ch03 && python telemetry.py settings samples/settings_desired.json > /dev/null
 	cd examples/ch03 && python telemetry.py growth streams.json > /dev/null
+	cd examples/ch04 && python firmware_sim.py table > /dev/null
+	cd examples/ch04 && python firmware_sim.py interlock > /dev/null
+	cd examples/ch04 && python firmware_sim.py compare --outage 120:420 > /dev/null
+	cd examples/ch04 && python firmware_sim.py run --hose-burst > /dev/null

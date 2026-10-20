@@ -1,5 +1,4 @@
 import pytest
-
 from firmware_sim import (
     CFG,
     OWNER,
