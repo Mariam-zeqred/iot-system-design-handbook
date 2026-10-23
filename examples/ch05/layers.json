@@ -1,0 +1,197 @@
+{
+  "parts": [
+    "firmware",
+    "mcu",
+    "sensor",
+    "ssr",
+    "gate",
+    "cutout",
+    "power",
+    "network",
+    "cloud",
+    "human"
+  ],
+  "signals": {
+    "heat": "the chamber temperature rises past the limit",
+    "silence": "the firmware stops running (hang, crash loop, power loss)",
+    "fault_declared": "the firmware itself latched a critical fault"
+  },
+  "layers": [
+    {
+      "id": "control",
+      "name": "control loop (hysteresis)",
+      "senses": [
+        "heat"
+      ],
+      "through": [
+        "firmware",
+        "sensor"
+      ],
+      "acts_through": [
+        "firmware",
+        "ssr"
+      ],
+      "response_s": 1,
+      "acts": true
+    },
+    {
+      "id": "interlock",
+      "name": "firmware interlock: 40 C cutoff, max on-time, latch",
+      "senses": [
+        "heat"
+      ],
+      "through": [
+        "firmware",
+        "sensor"
+      ],
+      "acts_through": [
+        "firmware",
+        "ssr"
+      ],
+      "response_s": 30,
+      "acts": true
+    },
+    {
+      "id": "watchdog",
+      "name": "hardware watchdog + pull-down on the driver pin",
+      "senses": [
+        "silence"
+      ],
+      "through": [
+        "mcu"
+      ],
+      "acts_through": [
+        "mcu",
+        "ssr"
+      ],
+      "response_s": 7,
+      "acts": true
+    },
+    {
+      "id": "gate",
+      "name": "heartbeat gate: second switch in series, opens when the pulses stop",
+      "senses": [
+        "silence",
+        "fault_declared"
+      ],
+      "through": [
+        "gate"
+      ],
+      "acts_through": [
+        "gate"
+      ],
+      "response_s": 3,
+      "acts": true
+    },
+    {
+      "id": "cutout",
+      "name": "thermal cutout in the heater circuit (bimetal, manual reset); 31 min is compare's figure",
+      "senses": [
+        "heat"
+      ],
+      "through": [
+        "cutout"
+      ],
+      "acts_through": [
+        "cutout"
+      ],
+      "response_s": 1860,
+      "acts": true
+    },
+    {
+      "id": "human",
+      "name": "a person, told by the cloud (N3 notices silence by itself) or by the buzzer; an hour is assumed",
+      "senses": [
+        "silence",
+        "fault_declared"
+      ],
+      "through": [
+        "cloud",
+        "human"
+      ],
+      "acts_through": [
+        "human"
+      ],
+      "response_s": 3600,
+      "acts": true
+    }
+  ],
+  "failures": [
+    {
+      "id": "network-down",
+      "name": "router dead for an hour",
+      "breaks": [
+        "network"
+      ],
+      "produces": [],
+      "hazard": "none on the device (N3 and N6 are the cloud's problem)",
+      "critical": false
+    },
+    {
+      "id": "mcu-hang",
+      "name": "MCU hangs with the heater pin high",
+      "breaks": [
+        "firmware"
+      ],
+      "produces": [
+        "heat",
+        "silence"
+      ],
+      "hazard": "N1",
+      "critical": true
+    },
+    {
+      "id": "ssr-short",
+      "name": "heater SSR fails shorted (its common failure mode)",
+      "breaks": [
+        "ssr"
+      ],
+      "produces": [
+        "heat",
+        "fault_declared"
+      ],
+      "hazard": "N1",
+      "critical": true
+    },
+    {
+      "id": "sensor-stuck",
+      "name": "control sensor sticks at an in-range value",
+      "breaks": [
+        "sensor"
+      ],
+      "produces": [
+        "heat"
+      ],
+      "hazard": "N1",
+      "critical": true
+    },
+    {
+      "id": "bad-setpoint",
+      "name": "firmware alive and wrong: an unclamped setpoint and a cutoff tied to it",
+      "breaks": [
+        "firmware"
+      ],
+      "produces": [
+        "heat"
+      ],
+      "hazard": "N1",
+      "critical": true
+    },
+    {
+      "id": "power-loss",
+      "name": "mains fails at the device",
+      "breaks": [
+        "firmware",
+        "mcu",
+        "ssr",
+        "gate",
+        "network"
+      ],
+      "produces": [
+        "silence"
+      ],
+      "hazard": "cold, not N1: the heater's safe state is off; the chamber cools slowly and only N3 remains",
+      "critical": false
+    }
+  ]
+}

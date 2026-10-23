@@ -12,7 +12,7 @@ Each chapter is 1 500–3 000 words with one worked example, 3–5 exercises (an
 | 2 | [Choosing the data path](ch02-choosing-the-data-path.md) | List the computations, apply five placement rules in order, read the data path off the table; a traffic tool sizes three candidate paths. |
 | 3 | [Data modelling](ch03-data-modelling.md) | One record is the contract; status, history, events and settings get a writer, a key, a mode and a retention; five rules for changing the schema under a live fleet; a validator, a frame codec and a growth table. |
 | 4 | [Firmware architecture](ch04-firmware-architecture.md) | Cut the device's computations into tasks by rate, blocking and what they write; one snapshot with one writer per field; one interlock with a generated truth table; a watchdog fed by one task; a simulator measures what one blocking call does to the safety task. |
-| 5 | Safety layers that do not depend on the network | *(not yet written)* |
+| 5 | [Safety layers that do not depend on the network](ch05-safety-layers.md) | How the guarding parts fail (a hung MCU, a shorted SSR, a lying sensor, a firmware that is alive and wrong); six layers ordered by what each senses, acts through and shares; pull-downs, the heartbeat gate and a bimetal cutout sized with two bounds; a coverage table and a stuck-heater simulation on the incubator's fitted chamber measure what each layer buys. |
 | 6 | Connectivity | *(not yet written)* Wi-Fi, MQTT, HTTPS, LoRaWAN, cellular; a selection table with power and cost. |
 | 7 | Provisioning, identity and secrets | *(not yet written)* what the two real repos got wrong and how to fix it. |
 | 8 | Cloud side | *(not yet written)* Firebase RTDB vs AWS IoT Core vs self-hosted MQTT + Timescale; cost at 10 / 1 000 / 100 000 devices. |
@@ -65,6 +65,18 @@ Every record carries `schema` and `dev`; readers migrate old versions on read an
 
 `examples/ch04/firmware_sim.py` runs these six tasks as an RTOS would and as one `loop()` would, through a five-minute router outage; the chapter's table (safety-task gaps of 0.1 s versus 5 s with a watchdog and 90 s without, five resets, one false sensor fault) is its output.
 
+## What the safety layers look like (chapter 5)
+
+| Layer | Senses | Acts through | Catches |
+|---|---|---|---|
+| control, interlock (chapter 4) | the sensor | firmware → SSR | what the firmware can see and act on |
+| watchdog + pull-down | the safety task's silence | a reset, the pin held low | a hung MCU |
+| heartbeat gate | silence, or a fault the firmware declared | a second relay in series | a hung MCU, a shorted SSR |
+| thermal cutout (bimetal, manual reset) | heat, directly | the heater circuit | a lying sensor, a wrong firmware |
+| a person | the buzzer, the cloud's offline detection (N3) | hands | power loss (the heater's safe state) |
+
+`examples/ch05/layers.py coverage` prints which layer survives which failure; `compare` runs four failures against four layer sets on the incubator's fitted chamber model (peak 68.4 °C with firmware alone when the SSR shorts, 41.3 °C with the gate; 62.8 °C after 90 minutes when the sensor sticks, 46.6 °C after 31 minutes with the cutout).
+
 ## Running the examples
 
 ```bash
@@ -76,13 +88,14 @@ Each `examples/chNN/` folder has its own README with the commands for that chapt
 
 ## Status and limitations
 
-- Chapters 1 to 4 are written; 5 to 10 are planned (see the table above).
+- Chapters 1 to 5 are written; 6 to 10 are planned (see the table above) and will be added one at a time.
 - Every number quoted from the two real systems comes from their READMEs, not from measurements made for this handbook; every number produced by an example script is labelled as such in the chapter.
 - The traffic figures in chapter 2 count payload, MQTT, TLS-record and LoRaWAN overhead only, not TCP/IP or radio framing, and their cost column is illustrative until chapter 8 cites real price pages.
 - The growth figures in chapter 3 count compact JSON bytes only, not database keys or indexes; they are a floor for chapter 8 to price.
 - Where chapter 3 reads the two real systems' schemas, it quotes their own `docs/DATA_CONTRACT.md` and `docs/FIREBASE_SCHEMA.md`, not a database inspected for this handbook.
 - The examples are standard-library Python; nothing here runs on a microcontroller. Chapter 4's simulator models the task set and the interlock on the host; its greenhouse is a first-order model, so every number it prints is a property of the model and the task design, not a measurement. The firmware-side counterparts are the two real repos' firmware READMEs, which chapter 4 quotes.
 - Chapter 4 quotes the two firmware READMEs for task rates, the interlock inputs and the watchdog; where a README gives no value (priorities, stacks, cores, the poultry controller's shared-state structure), the chapter says so rather than reading the code.
+- Chapter 5's chamber model is the fit published in incubator-telemetry-analysis (one device, one day, door shut); everything above about 39 °C is an extrapolation of that linear fit, and the SSR, bimetal, gate and firmware in the simulation are models of the chapter's design, not measured parts. Its statements about what the two real systems lack (thermal cutout, fuse, pull-downs, a second series switch) are statements about their READMEs, not inspections of the hardware.
 
 ## Licence
 

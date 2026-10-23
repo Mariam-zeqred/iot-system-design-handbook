@@ -11,6 +11,7 @@ test:
 	cd examples/ch02 && pytest -q
 	cd examples/ch03 && pytest -q
 	cd examples/ch04 && pytest -q
+	cd examples/ch05 && pytest -q
 
 # Each chapter's example must run from a clean checkout. Chapter 1's checker
 # exits 1 on purpose (N7 is left incomplete), so only its --markdown mode is
@@ -27,3 +28,7 @@ examples:
 	cd examples/ch04 && python firmware_sim.py interlock > /dev/null
 	cd examples/ch04 && python firmware_sim.py compare --outage 120:420 > /dev/null
 	cd examples/ch04 && python firmware_sim.py run --hose-burst > /dev/null
+	cd examples/ch05 && python layers.py coverage layers.json > /dev/null
+	cd examples/ch05 && python layers.py compare > /dev/null
+	cd examples/ch05 && python layers.py run --fail ssr-short --layers interlock,gate > /dev/null
+	cd examples/ch05 && python layers.py sizing > /dev/null
