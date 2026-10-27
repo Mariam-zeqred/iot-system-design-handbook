@@ -47,7 +47,7 @@ Three ways to give a device an identity the server can verify, in rising cost:
 
 **A per-device key pair.** The unit generates a key that never leaves it, the server signs a certificate for the public half, and the TLS handshake proves possession without the key crossing the link. AWS IoT Core's X.509 client certificates are this, with a policy per certificate; a secure element (an ATECC608 beside the ESP32) makes the key uncopyable even with the unit in hand.
 
-What each is worth is clearest when something goes wrong. `python identity.py blast` derives, from four properties of a design, what an attacker holds after six events:
+What each is worth is clearest when something goes wrong. `python identity.py blast` derives, from four properties of a design, what an attacker holds after each of six events; five are shown here, and the sixth, a lost phone with the owner's app, is the same for every design, that user's devices until their session is revoked:
 
 | design | repo | image | stolen | mitm | server |
 |---|---|---|---|---|---|
