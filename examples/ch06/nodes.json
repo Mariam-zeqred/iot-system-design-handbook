@@ -1,0 +1,71 @@
+{
+  "_note": "The farm monitor's nodes with what chapter 2's traffic table and chapter 3's records say each one sends. `messages` bytes are the body sizes `examples/ch02/data_path.py traffic` measured (84 B status, 140 B history, 104 B event; 11 B frame for the plot node). `command_deadline_s` is how long a setting or plan may take to reach the node; `required_life_days` is what a battery node must last between visits.",
+  "nodes": [
+    {
+      "id": "gh1",
+      "name": "Greenhouse node 1",
+      "power": "mains",
+      "battery_mah": null,
+      "distance_to_router_m": 25,
+      "distance_to_gateway_m": 5,
+      "cellular_coverage": true,
+      "sf": 7,
+      "command_deadline_s": 5,
+      "required_life_days": null,
+      "messages": [
+        {"name": "status", "bytes": 84, "per_day": 1440},
+        {"name": "history", "bytes": 140, "per_day": 144},
+        {"name": "events", "bytes": 104, "per_day": 10}
+      ]
+    },
+    {
+      "id": "gh2",
+      "name": "Greenhouse node 2",
+      "power": "mains",
+      "battery_mah": null,
+      "distance_to_router_m": 40,
+      "distance_to_gateway_m": 20,
+      "cellular_coverage": true,
+      "sf": 7,
+      "command_deadline_s": 5,
+      "required_life_days": null,
+      "messages": [
+        {"name": "status", "bytes": 84, "per_day": 1440},
+        {"name": "history", "bytes": 140, "per_day": 144},
+        {"name": "events", "bytes": 104, "per_day": 10}
+      ]
+    },
+    {
+      "id": "plot",
+      "name": "Plot node (soil, tank)",
+      "power": "battery",
+      "battery_mah": 2000,
+      "distance_to_router_m": 200,
+      "distance_to_gateway_m": 200,
+      "cellular_coverage": true,
+      "sf": 8,
+      "command_deadline_s": 3600,
+      "required_life_days": 365,
+      "messages": [
+        {"name": "status frame", "bytes": 11, "per_day": 144},
+        {"name": "event frame", "bytes": 11, "per_day": 10}
+      ]
+    },
+    {
+      "id": "pump",
+      "name": "Pump-house node",
+      "power": "mains",
+      "battery_mah": null,
+      "distance_to_router_m": 1800,
+      "distance_to_gateway_m": 1800,
+      "cellular_coverage": true,
+      "sf": 9,
+      "command_deadline_s": 60,
+      "required_life_days": null,
+      "messages": [
+        {"name": "status frame", "bytes": 11, "per_day": 96},
+        {"name": "event frame", "bytes": 11, "per_day": 10}
+      ]
+    }
+  ]
+}

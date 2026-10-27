@@ -1,0 +1,84 @@
+{
+  "_note": "Every number here is a design parameter with its origin in `source`. Prices are illustrative order-of-magnitude figures, not quotations; currents and seconds are typical datasheet or published values, not measurements made for this handbook. Replace them with your parts' datasheets and a measured connect sequence.",
+  "usable_battery_fraction": 0.7,
+  "usable_battery_fraction_source": "self-discharge, cold and cutoff voltage: a common derating for alkaline and Li-ion packs; measured packs decide",
+  "links": [
+    {
+      "id": "wifi",
+      "name": "Wi-Fi + MQTT over TLS",
+      "range_m": 50,
+      "range_source": "2.4 GHz to a domestic router across a yard, no walls in the way: tens of metres; a site survey decides",
+      "max_payload_bytes": null,
+      "airtime_budget_s_per_day": null,
+      "downlink_latency_s": 2,
+      "downlink_source": "a subscribed MQTT client on a kept TLS session hears a publish within the broker round trip",
+      "per_device_usd_month": 0,
+      "per_device_source": "the farm's existing internet; nothing per node",
+      "site_usd": 0,
+      "site_life_years": 5,
+      "site_shared_by": 1,
+      "site_source": "the router already exists",
+      "energy": {
+        "sleep_ua": 50,
+        "sleep_source": "ESP32 deep sleep is ~10 uA; a module with its regulator and a sensor ~50 uA (assumed)",
+        "wake_s": 3.2,
+        "wake_ma": 120,
+        "wake_source": "association + DHCP + NTP + TLS session resumption + one publish, 3 s typical on an ESP32; 120 mA is a rough average of its Wi-Fi RX/TX currents (Espressif datasheet gives ~100 mA RX, up to 240 mA TX peaks)"
+      }
+    },
+    {
+      "id": "lorawan",
+      "name": "LoRaWAN (EU868 plan) through a gateway",
+      "range_m": 2000,
+      "range_source": "rural, antenna a few metres up, some trees: 2 km is conservative for SF7-SF9; 10 km+ needs line of sight and higher SF",
+      "max_payload_by_sf": {"7": 222, "8": 222, "9": 115, "10": 51, "11": 51, "12": 51},
+      "max_payload_source": "LoRaWAN Regional Parameters, EU863-870 maximum application payload (N) per data rate",
+      "airtime_budget_s_per_day": 30,
+      "airtime_budget_source": "The Things Network Fair Use Policy: 30 s of uplink airtime per device per day on the community network. The regulatory 1 % duty cycle (36 s per hour per sub-band) is the only limit on a network server you run yourself; `airtime` prints both.",
+      "downlink_latency_s": 2,
+      "downlink_source": "class C (receiver always on, mains only): a downlink within seconds. A class A node hears a downlink only in the two receive windows after its own uplink, so its latency is its uplink period; `select` applies that to battery nodes.",
+      "class_c_rx_ma": 12,
+      "per_device_usd_month": 0,
+      "per_device_source": "community network server free under fair use, or a self-hosted ChirpStack counted in chapter 8",
+      "site_usd": 150,
+      "site_life_years": 5,
+      "site_shared_by": 2,
+      "site_source": "one indoor 8-channel gateway, order of magnitude; shared by the plot and pump-house nodes (illustrative)",
+      "energy": {
+        "sleep_ua": 15,
+        "sleep_source": "MCU deep sleep + radio sleep (~1 uA) + sensor off (assumed)",
+        "wake_s": 0.5,
+        "wake_ma": 20,
+        "wake_source": "wake, read the sensors, pack the frame (assumed)",
+        "tx_ma": 45,
+        "tx_source": "+14 dBm on an SX1276-class radio: datasheet ~29 mA at +13 dBm, more on the PA_BOOST pin; 45 mA is a conservative round number",
+        "rx_s": 0.3,
+        "rx_ma": 12,
+        "rx_source": "the two class A receive windows, mostly empty (assumed)"
+      }
+    },
+    {
+      "id": "cellular",
+      "name": "LTE-M / NB-IoT + MQTT over TLS",
+      "range_m": null,
+      "range_source": "wherever the operator has coverage; the node's `cellular_coverage` flag",
+      "max_payload_bytes": null,
+      "airtime_budget_s_per_day": null,
+      "downlink_latency_s": 5,
+      "downlink_source": "a registered modem with a kept session: seconds. A node in power-saving mode (PSM) is unreachable until its next wake, so a battery node's latency is its uplink period.",
+      "per_device_usd_month": 2,
+      "per_device_source": "an IoT SIM with a few MB a month: the order of magnitude of published plans, not a quotation",
+      "site_usd": 0,
+      "site_life_years": 5,
+      "site_shared_by": 1,
+      "site_source": "the operator's network",
+      "energy": {
+        "sleep_ua": 20,
+        "sleep_source": "modem in PSM plus MCU deep sleep (assumed)",
+        "wake_s": 5,
+        "wake_ma": 100,
+        "wake_source": "leave PSM, tracking-area update, TLS resumption, one publish: 2-10 s and 100-200 mA in published measurements; 5 s at 100 mA is a middle value (assumed)"
+      }
+    }
+  ]
+}
