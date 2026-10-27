@@ -1,0 +1,17 @@
+{
+  "system": "farm monitor (the design of chapters 1-7)",
+  "items": [
+    {"name": "device id (`gh-1`, derived from the efuse MAC, printed on the label)", "kind": "identifier", "scope": "device", "holder": "device", "lives_in": "label"},
+    {"name": "broker host / database URL", "kind": "identifier", "scope": "fleet", "holder": "device", "lives_in": "source"},
+    {"name": "TLS root certificates (public certificates)", "kind": "identifier", "scope": "fleet", "holder": "device", "lives_in": "image"},
+    {"name": "OTA image signing key, public half", "kind": "identifier", "scope": "fleet", "holder": "device", "lives_in": "image"},
+    {"name": "app's cloud project id and web API key", "kind": "identifier", "scope": "fleet", "holder": "app", "lives_in": "source"},
+    {"name": "farm Wi-Fi SSID and password", "kind": "secret", "scope": "site", "holder": "device", "lives_in": "nvs"},
+    {"name": "per-device custom token (claim flow step 3)", "kind": "secret", "scope": "device", "holder": "device", "lives_in": "nvs"},
+    {"name": "per-device refresh token", "kind": "secret", "scope": "device", "holder": "device", "lives_in": "nvs"},
+    {"name": "setup hotspot password (per unit, on the label)", "kind": "secret", "scope": "device", "holder": "person", "lives_in": "label"},
+    {"name": "owner's app session (user ID token)", "kind": "secret", "scope": "user", "holder": "app", "lives_in": "phone"},
+    {"name": "token signing key", "kind": "secret", "scope": "fleet", "holder": "server", "lives_in": "server"},
+    {"name": "OTA image signing key, private half", "kind": "secret", "scope": "fleet", "holder": "server", "lives_in": "server"}
+  ]
+}

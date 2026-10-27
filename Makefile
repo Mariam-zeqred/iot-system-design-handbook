@@ -13,11 +13,14 @@ test:
 	cd examples/ch04 && pytest -q
 	cd examples/ch05 && pytest -q
 	cd examples/ch06 && pytest -q
+	cd examples/ch07 && pytest -q
 
 # Each chapter's example must run from a clean checkout. Chapter 1's checker
 # exits 1 on purpose (N7 is left incomplete), so only its --markdown mode is
 # required to succeed here.  Chapter 3's validate also exits 1 on purpose
 # (two sample records are bad), so the other three tools stand for it.
+# Chapter 7's scan exits 1 on purpose over samples/ (four planted secrets),
+# so that line is negated.
 examples:
 	cd examples/ch01 && python never_list.py never_list.json --markdown > /dev/null
 	cd examples/ch02 && python data_path.py place computations.json > /dev/null
@@ -38,3 +41,9 @@ examples:
 	cd examples/ch06 && python link.py budget nodes.json links.json > /dev/null
 	cd examples/ch06 && python link.py select nodes.json links.json > /dev/null
 	cd examples/ch06 && python link.py backoff > /dev/null
+	cd examples/ch07 && python identity.py inventory inventory.json > /dev/null
+	cd examples/ch07 && python identity.py inventory inventory_real.json > /dev/null
+	cd examples/ch07 && python identity.py blast > /dev/null
+	cd examples/ch07 && python identity.py provision > /dev/null
+	cd examples/ch07 && python identity.py rotate > /dev/null
+	cd examples/ch07 && ! python identity.py scan samples > /dev/null

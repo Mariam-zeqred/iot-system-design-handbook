@@ -1,0 +1,19 @@
+{
+  "system": "the two real systems, as their READMEs and secrets templates describe them (read 2026-10-27)",
+  "items": [
+    {"name": "incubator: device name `hive-XXXXXX` (last three MAC bytes, `Identity.*`)", "kind": "identifier", "scope": "device", "holder": "device", "lives_in": "source"},
+    {"name": "incubator: `FIREBASE_BASE` database URL", "kind": "identifier", "scope": "fleet", "holder": "device", "lives_in": "source"},
+    {"name": "incubator: `TLS_ROOT_CA_PEM` (GTS Root R1/R4)", "kind": "identifier", "scope": "fleet", "holder": "device", "lives_in": "image"},
+    {"name": "incubator: `FIREBASE_AUTH` legacy database secret (README: 'in the source tree and inside every published OTA image')", "kind": "secret", "scope": "fleet", "holder": "device", "lives_in": "image", "fix": "rotate it in the console; replace with a per-device custom token in NVS behind closed rules"},
+    {"name": "incubator: Wi-Fi credentials (sent by the app over the setup hotspot, stored in NVS)", "kind": "secret", "scope": "site", "holder": "device", "lives_in": "nvs"},
+    {"name": "incubator: setup hotspot password (`WIFI_PROVISION_AP_PASSWORD`, one default in `Config.h`)", "kind": "secret", "scope": "fleet", "holder": "person", "lives_in": "source", "fix": "derive a per-unit password from the chip id and print it on the label, or confirm the pairing with a PIN on the LCD"},
+    {"name": "incubator: `NOTIFY_URL` ntfy topic (template: 'anyone can read or post to it')", "kind": "secret", "scope": "fleet", "holder": "device", "lives_in": "image", "fix": "an authenticated topic or a relay the device reaches with its own token"},
+    {"name": "poultry: `FIREBASE_TOKEN` legacy database secret (compiled in from `secrets.h`)", "kind": "secret", "scope": "fleet", "holder": "device", "lives_in": "image", "fix": "same as the incubator: per-device custom token in NVS behind closed rules"},
+    {"name": "poultry: `WIFI_SSID` / `WIFI_PASS` compiled-in fallback", "kind": "secret", "scope": "site", "holder": "device", "lives_in": "image", "fix": "drop the fallback; the setup portal already provisions into NVS"},
+    {"name": "poultry: setup portal password (`AP_PASS`, one default in `config.h` and in the README)", "kind": "secret", "scope": "fleet", "holder": "person", "lives_in": "source", "fix": "per unit, on the label"},
+    {"name": "poultry: OTA upload page basic-auth (`OTA_USER` / `OTA_PASS` in `config.h`)", "kind": "secret", "scope": "fleet", "holder": "person", "lives_in": "source", "fix": "per unit, set at provisioning; better, signed images pulled by the device (chapter 9)"},
+    {"name": "poultry: `ONESIGNAL_REST_API_KEY` (sends push notifications from the device)", "kind": "secret", "scope": "fleet", "holder": "device", "lives_in": "image", "fix": "send notifications from a server function; the device writes an event, nothing more"},
+    {"name": "poultry: Firebase web / Android API keys in the app (README: 'client identifiers, not secrets')", "kind": "identifier", "scope": "fleet", "holder": "app", "lives_in": "source"},
+    {"name": "poultry: database URL", "kind": "identifier", "scope": "fleet", "holder": "device", "lives_in": "source"}
+  ]
+}
