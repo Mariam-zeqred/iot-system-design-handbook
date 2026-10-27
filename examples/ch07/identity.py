@@ -29,6 +29,7 @@ import hashlib
 import hmac
 import json
 import re
+import secrets
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -371,7 +372,7 @@ class Device:
 def scenarios(clock_start: int = 1_700_000_000) -> list[dict]:
     """The claim flow for two devices, then the reads and writes that matter."""
     now = [clock_start]
-    server = Server(b"server-signing-key-never-leaves-the-server", lambda: now[0])
+    server = Server(secrets.token_bytes(32), lambda: now[0])  # fresh key, never stored
     a, b = Device("hive-1C5A00"), Device("hive-2B7F10")
     a.provision(server.claim(a.device_id, "user-mariam"), server)
     b.provision(server.claim(b.device_id, "user-mariam"), server)
