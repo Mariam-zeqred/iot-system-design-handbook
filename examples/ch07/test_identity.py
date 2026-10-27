@@ -5,9 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 import identity as I
+import pytest
 
 HERE = Path(__file__).parent
 
