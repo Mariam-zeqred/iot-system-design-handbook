@@ -15,7 +15,7 @@ Each chapter is 1 500–3 000 words with one worked example, 3–5 exercises (an
 | 5 | [Safety layers that do not depend on the network](ch05-safety-layers.md) | How the guarding parts fail (a hung MCU, a shorted SSR, a lying sensor, a firmware that is alive and wrong); six layers ordered by what each senses, acts through and shares; pull-downs, the heartbeat gate and a bimetal cutout sized with two bounds; a coverage table and a stuck-heater simulation on the incubator's fitted chamber measure what each layer buys. |
 | 6 | [Connectivity: choosing the link](ch06-connectivity.md) | Wi-Fi, LoRaWAN and cellular compared by reach, payload, message budget, downlink and what one message costs a battery; five exclusion rules per node and the cheapest survivor; LoRa airtime against the 1 % duty cycle and the 30 s fair use; MQTT's kept session against HTTPS per request; the comms task's contract (stages, clock before TLS, backoff with jitter, outbox per stream, keep-alive against N3); a selection tool, an energy budget and a 1 000-node reconnect simulation. |
 | 7 | [Provisioning, identity and secrets](ch07-provisioning-identity-secrets.md) | Four questions every request must answer; an inventory of values with five home rules (a secret never lives in source or an image, a device holds only device-scoped secrets, people's passwords are per unit); what one credential is worth when a repo, an image, a unit, a router or the server is lost; least-privilege rules that spend the identity; the claim flow that gets a per-device token into NVS; rotation and revocation costed; TLS verification and signed images; the two real systems' eight gaps, named by their own READMEs, and the order to close them. |
-| 8 | Cloud side | *(not yet written)* Firebase RTDB vs AWS IoT Core vs self-hosted MQTT + Timescale; cost at 10 / 1 000 / 100 000 devices. |
+| 8 | [The cloud side](ch08-cloud-side.md) | Three shapes for the cloud side (a database the device writes to, a managed broker with managed stores, a broker and a time-series database you run) against twelve jobs the earlier chapters created; what each one bills (bytes, messages, machines and people); the farm monitor priced at 10 / 1 000 / 100 000 devices with every price's source and date; the listening phone as the hidden multiplier and where a listener is attached; chapter 7's rules table in three dialects; five selection rules in order; the two real systems on the free plan. |
 | 9 | Observability and OTA | *(not yet written)* |
 | 10 | Case study | *(not yet written)* the farm monitor end to end with every artefact. |
 
@@ -87,6 +87,16 @@ Every record carries `schema` and `dev`; readers migrate old versions on read an
 
 `examples/ch06/link.py select nodes.json links.json` prints that table's reasons; `airtime`, `budget`, `protocol` and `backoff` print the numbers behind them (every current, second and price is a labelled assumption in `links.json`).
 
+## What the cloud side costs (chapter 8)
+
+| devices | Firebase RTDB | AWS IoT Core + stores | self-hosted MQTT + Timescale |
+|---|---|---|---|
+| 10 | $1.07 (fits the free Spark plan: $0) | $0.81 | $13.75 + 2 h a month |
+| 1 000 | $106.71, 93 % of it history storage at $5/GB | $73.88, 82 % of it the 60 s status (message, rule, action, write unit) | $25.94 + 8 h a month |
+| 100 000 | $10 671 | $6 888 (message tiers applied) | $147 + 40 h a month |
+
+USD a month, `examples/ch08/cloud.py cost`, chapter 3's records on chapter 6's node mix. AWS prices from the AWS Price List API on 2026-10-28; Firebase and data-transfer prices from memory of the public pages (the sandbox could not reach them) and marked so in `prices.json`; the phones, the self-hosted sizing and the hours are assumptions listed in `fleet.json`. One lever each: `--status-period-s 300` takes the AWS column to $27.58 / $2 758, `--history-retention-days 30` takes the Firebase column to $11.96 / $1 196.
+
 ## Running the examples
 
 ```bash
@@ -98,15 +108,16 @@ Each `examples/chNN/` folder has its own README with the commands for that chapt
 
 ## Status and limitations
 
-- Chapters 1 to 7 are written; 8 to 10 are planned (see the table above) and will be added one at a time.
+- Chapters 1 to 8 are written; 9 and 10 are planned (see the table above) and will be added one at a time.
 - Every number quoted from the two real systems comes from their READMEs, not from measurements made for this handbook; every number produced by an example script is labelled as such in the chapter.
-- The traffic figures in chapter 2 count payload, MQTT, TLS-record and LoRaWAN overhead only, not TCP/IP or radio framing, and their cost column is illustrative until chapter 8 cites real price pages.
-- The growth figures in chapter 3 count compact JSON bytes only, not database keys or indexes; they are a floor for chapter 8 to price.
+- The traffic figures in chapter 2 count payload, MQTT, TLS-record and LoRaWAN overhead only, not TCP/IP or radio framing, and their cost column is illustrative; chapter 8 prices the same streams with sourced prices.
+- The growth figures in chapter 3 count compact JSON bytes only, not database keys or indexes; chapter 8 adds a key per row and prices them, still as a floor.
 - Where chapter 3 reads the two real systems' schemas, it quotes their own `docs/DATA_CONTRACT.md` and `docs/FIREBASE_SCHEMA.md`, not a database inspected for this handbook.
 - The examples are standard-library Python; nothing here runs on a microcontroller. Chapter 4's simulator models the task set and the interlock on the host; its greenhouse is a first-order model, so every number it prints is a property of the model and the task design, not a measurement. The firmware-side counterparts are the two real repos' firmware READMEs, which chapter 4 quotes.
 - Chapter 4 quotes the two firmware READMEs for task rates, the interlock inputs and the watchdog; where a README gives no value (priorities, stacks, cores, the poultry controller's shared-state structure), the chapter says so rather than reading the code.
 - Chapter 6's airtime figures are the SX127x datasheet formula, not measurements; its energy, range and price figures are assumptions listed with their origin in `examples/ch06/links.json`, and the battery lives, costs and the chosen links follow from them. Nothing was measured on a radio, a battery or a broker; the reconnect simulation is a model of a schedule, not a real fleet. Its statements about the two real systems' connectivity are quotations from their READMEs.
 - Chapter 7's inventory of the two real systems is built from their READMEs, secrets templates and the configuration files those name; no device, database or project was inspected, and no credential value appears anywhere in this handbook. Its `provision` tool is a model of the claim flow with HMAC-signed tokens, not Firebase's engine or a product; the rules table should be replayed in the Firebase emulator before anything is deployed. Its `rotate` figures are arithmetic on the fleet size, rollout and visit intervals passed in.
+- Chapter 8's bills are arithmetic on chapter 3's record sizes and rates: nothing was deployed, metered or invoiced. The AWS unit prices were read from the AWS Price List API (us-east-1) on 2026-10-28 and carry their offer versions; the Firebase Realtime Database and AWS data-transfer prices are written from memory because the sandbox could not reach the price pages, and `prices.json` marks them `"verified": false`. The phones' behaviour, the self-hosted instance sizes, the compression ratio and the operations hours are assumptions named in `fleet.json`; the three rules files `cloud.py rules` writes have not been run against their engines. What the chapter says about the two real systems' cloud side is quoted from their READMEs, architecture and data-contract documents.
 - Chapter 5's chamber model is the fit published in incubator-telemetry-analysis (one device, one day, door shut); everything above about 39 °C is an extrapolation of that linear fit, and the SSR, bimetal, gate and firmware in the simulation are models of the chapter's design, not measured parts. Its statements about what the two real systems lack (thermal cutout, fuse, pull-downs, a second series switch) are statements about their READMEs, not inspections of the hardware.
 
 ## Licence
