@@ -14,6 +14,7 @@ test:
 	cd examples/ch05 && pytest -q
 	cd examples/ch06 && pytest -q
 	cd examples/ch07 && pytest -q
+	cd examples/ch08 && pytest -q
 
 # Each chapter's example must run from a clean checkout. Chapter 1's checker
 # exits 1 on purpose (N7 is left incomplete), so only its --markdown mode is
@@ -47,3 +48,11 @@ examples:
 	cd examples/ch07 && python identity.py provision > /dev/null
 	cd examples/ch07 && python identity.py rotate > /dev/null
 	cd examples/ch07 && ! python identity.py scan samples > /dev/null
+	cd examples/ch08 && python cloud.py fit requirements.json > /dev/null
+	cd examples/ch08 && python cloud.py cost fleet.json prices.json > /dev/null
+	cd examples/ch08 && python cloud.py cost --status-period-s 300 --history-retention-days 30 > /dev/null
+	cd examples/ch08 && python cloud.py fanout fleet.json prices.json > /dev/null
+	cd examples/ch08 && python cloud.py rules firebase > /dev/null
+	cd examples/ch08 && python cloud.py rules aws > /dev/null
+	cd examples/ch08 && python cloud.py rules mosquitto > /dev/null
+	cd examples/ch08 && python cloud.py rules map > /dev/null

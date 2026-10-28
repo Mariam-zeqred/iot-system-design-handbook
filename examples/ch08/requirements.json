@@ -1,0 +1,81 @@
+{
+  "levels": {
+    "native": "the platform does it with configuration",
+    "add-on": "one more managed piece (a function, a second service) does it",
+    "you build": "code you write and run does it"
+  },
+  "jobs": [
+    {
+      "job": "ingest: accept a write from a device and fan it out to listeners",
+      "firebase": ["native", "a write to a path; every onValue listener on that path receives the change"],
+      "aws": ["native", "MQTT publish into IoT Core; subscribers on the topic receive it"],
+      "self": ["native", "MQTT publish into the broker; subscribers receive it"]
+    },
+    {
+      "job": "latest state per device (status, settings reported), readable on app open",
+      "firebase": ["native", "the path holds the latest value; overwrite is the default"],
+      "aws": ["add-on", "a rule action writes the message into a DynamoDB table keyed by device (or the Device Shadow at $1.25 per million operations)"],
+      "self": ["add-on", "a retained message on the broker gives the latest to a new subscriber; a collector keeps it in a table"]
+    },
+    {
+      "job": "history: append, range query by device and time, retention",
+      "firebase": ["you build", "append works; range queries need .indexOn per path; retention is a scheduled function that deletes old keys, and storage is billed at the database rate"],
+      "aws": ["add-on", "a rule action into Firehose, batched to S3 (cold), and a second action into DynamoDB with a TTL (hot); the chart reads the hot table"],
+      "self": ["add-on", "a collector subscribes and inserts into TimescaleDB; a retention policy drops old chunks; compression is a table setting"]
+    },
+    {
+      "job": "events: append once (replay-safe), two fields the app may set",
+      "firebase": ["native", "a key the device derives, a .write rule of !data.exists() and two mutable children"],
+      "aws": ["add-on", "a rule action with a conditional DynamoDB put on the id; the app's acknowledgement goes through the API"],
+      "self": ["you build", "the collector inserts with ON CONFLICT DO NOTHING; the acknowledgement is an API the app calls"]
+    },
+    {
+      "job": "settings desired / reported with a version the device echoes",
+      "firebase": ["native", "two paths; the device listens to desired and overwrites reported"],
+      "aws": ["native", "the Device Shadow is exactly desired / reported / delta with a version"],
+      "self": ["add-on", "a retained settings topic the device subscribes to; reported is a second topic the collector stores"]
+    },
+    {
+      "job": "presence: offline after N3's window, judged where silence is observed",
+      "firebase": ["add-on", "a scheduled function compares each status ts with now; onDisconnect writes exist for SDK clients but not for a REST device"],
+      "aws": ["native", "the last will on the MQTT session, plus lifecycle events on $aws/events/presence; the N3 window still needs a scheduled check of the status table"],
+      "self": ["native", "the last will on the MQTT session; the collector marks offline when no status arrives in the window"]
+    },
+    {
+      "job": "identity: one credential per device, rules that spend it (chapter 7)",
+      "firebase": ["add-on", "custom tokens minted by the Admin SDK on a server you run or a function; the rules read auth.token"],
+      "aws": ["native", "an X.509 certificate per thing with a policy on ${iot:Connection.Thing.ThingName}; fleet provisioning for the claim flow"],
+      "self": ["add-on", "a password or client certificate per client in the broker's auth plugin and an ACL per client id; a claim service you write"]
+    },
+    {
+      "job": "shape checks on what a device writes",
+      "firebase": ["native", ".validate rules on every path"],
+      "aws": ["add-on", "the rule's SQL selects fields; a Lambda action validates the rest"],
+      "self": ["you build", "the collector validates (pydantic or a schema) and drops what fails"]
+    },
+    {
+      "job": "OTA: a signed image the device fetches, and a per-device rollout record (chapter 9)",
+      "firebase": ["you build", "the image in Cloud Storage (Blaze plan) or in the database as text; the signature, the staged rollout and the state record are yours"],
+      "aws": ["native", "IoT Jobs with a signed S3 object and a rollout configuration"],
+      "self": ["you build", "an HTTPS file server, a signature the device checks, and a topic that names the version per device"]
+    },
+    {
+      "job": "an app that shows live values on a phone with an offline cache",
+      "firebase": ["native", "the mobile SDK: listeners, local cache, reconnection"],
+      "aws": ["add-on", "MQTT over WebSockets with Cognito credentials, or AppSync subscriptions; the cache is yours"],
+      "self": ["you build", "MQTT over WebSockets from the phone to your broker, or an API you expose; the cache is yours"]
+    },
+    {
+      "job": "backups and restore",
+      "firebase": ["add-on", "automated backups to Cloud Storage on the Blaze plan; restore is an import"],
+      "aws": ["native", "S3 versioning, DynamoDB point-in-time recovery, both priced per GB"],
+      "self": ["you build", "pg_dump or snapshots on a schedule, tested restores, and the disk to hold them"]
+    },
+    {
+      "job": "ceiling before the design changes",
+      "firebase": ["native", "200 000 simultaneous connections and one region per database instance; beyond that, shard devices across instances"],
+      "aws": ["native", "soft account limits (500 000 connections per account by default, raisable); multi-region is a second deployment"],
+      "self": ["you build", "whatever one broker and one database take before you cluster them; measure, then add nodes"]
+    }
+  ]
+}

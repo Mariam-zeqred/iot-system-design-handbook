@@ -1,0 +1,57 @@
+{
+  "name": "farm monitor: chapter 3's streams on chapter 6's node mix",
+  "fleet_sizes": [10, 1000, 100000],
+  "classes": [
+    {
+      "name": "greenhouse node (Wi-Fi, MQTT or SSE session kept open)",
+      "share": 0.667,
+      "holds_connection": true,
+      "gateway_per_nodes": null,
+      "streams": [
+        {"name": "status", "mode": "overwrite", "per_day": 1440, "bytes": 120, "key_bytes": 0, "retention_days": null},
+        {"name": "history", "mode": "append", "per_day": 144, "bytes": 178, "key_bytes": 10, "retention_days": 730},
+        {"name": "events", "mode": "append", "per_day": 10, "bytes": 254, "key_bytes": 24, "retention_days": null},
+        {"name": "settings reported", "mode": "overwrite", "per_day": 1, "bytes": 142, "key_bytes": 0, "retention_days": null}
+      ]
+    },
+    {
+      "name": "plot node (LoRaWAN, translated by the gateway into the same records)",
+      "share": 0.333,
+      "holds_connection": false,
+      "gateway_per_nodes": 10,
+      "streams": [
+        {"name": "status", "mode": "overwrite", "per_day": 144, "bytes": 120, "key_bytes": 0, "retention_days": null},
+        {"name": "history", "mode": "append", "per_day": 144, "bytes": 178, "key_bytes": 10, "retention_days": 730},
+        {"name": "events", "mode": "append", "per_day": 2, "bytes": 254, "key_bytes": 24, "retention_days": null},
+        {"name": "settings reported", "mode": "overwrite", "per_day": 1, "bytes": 142, "key_bytes": 0, "retention_days": null}
+      ]
+    }
+  ],
+  "events_sizing_years": 2,
+  "apps": {
+    "per_device": 0.1,
+    "devices_per_app": 10,
+    "listen_hours_per_day": 2,
+    "chart_opens_per_day": 2,
+    "chart_rows": 144,
+    "peak_fraction": 0.25,
+    "settings_changes_per_app_per_day": 1
+  },
+  "self_hosted": {
+    "compression_ratio": 10,
+    "disk_headroom": 1.5,
+    "min_disk_gb": 20,
+    "tiers": [
+      {"max_devices": 100, "instance": "t4g.small", "count": 1, "ops_hours_per_month": 2},
+      {"max_devices": 10000, "instance": "t4g.medium", "count": 1, "ops_hours_per_month": 8},
+      {"max_devices": null, "instance": "m6g.large", "count": 2, "ops_hours_per_month": 40}
+    ]
+  },
+  "sources": {
+    "streams": "bytes per record and rows per day are chapter 3's growth table (examples/ch03/streams.json, compact JSON); key_bytes is the database key each row needs (a 10-digit ts for history, dev-ts-type for events)",
+    "classes": "chapter 6's farm: two greenhouse nodes on Wi-Fi for every plot node on LoRaWAN; the plot node's 10-minute frame becomes one status and one history record at the gateway; one gateway per ten plot nodes is an assumption",
+    "events_sizing_years": "events are kept forever (chapter 3); steady state is sized here at two years so the table has a number",
+    "apps": "assumptions, not measurements: one phone per ten devices, watching its ten devices two hours a day, opening a 24-hour chart (144 rows) twice a day, a quarter of the phones open at the busiest moment, one settings change a day per phone",
+    "self_hosted": "assumptions, not benchmarks: a 10x compression ratio for time-series rows in TimescaleDB-style columnar compression (its documentation claims 90 % and more for typical telemetry; measure yours), 1.5x disk headroom, and an instance per fleet band chosen by judgement (one small ARM instance up to 100 devices, a medium one to 10 000, two large ones beyond: broker and database apart). Operations hours a month are a guess to be replaced by your own log"
+  }
+}

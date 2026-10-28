@@ -1,0 +1,67 @@
+{
+  "currency": "USD",
+  "gb_bytes": 1000000000,
+  "note": "GB means 10^9 bytes throughout; AWS bills 2^30-byte units, about 7 % fewer billed units than this table counts. Every AWS price below was read from the AWS Price List API (pricing.us-east-1.amazonaws.com/offers/v1.0/aws/<service>/current/us-east-1/index.json) on 2026-10-28; the offer version is given per service. The Firebase and data-transfer rows could not be fetched from this sandbox (firebase.google.com and aws.amazon.com are blocked) and are written from memory of the public price pages: verify them against the page before quoting.",
+  "firebase_rtdb": {
+    "source": "firebase.google.com/pricing, from memory on 2026-10-28 (page unreachable from the sandbox); verify",
+    "verified": false,
+    "storage_usd_per_gb_month": 5.0,
+    "download_usd_per_gb": 1.0,
+    "blaze_connections_per_database": 200000,
+    "spark_connections": 100,
+    "spark_storage_gb": 1,
+    "spark_download_gb_month": 10,
+    "download_overhead_factor": 1.0,
+    "overhead_note": "the price page says downloaded bytes include protocol overhead (TLS, framing); the factor is left at 1.0 so the table is a floor"
+  },
+  "aws_iot_core": {
+    "source": "AWS Price List API, AWSIoT us-east-1, offer version 20261003053120 (published 2026-10-03)",
+    "verified": true,
+    "connection_minutes_usd_per_million": 0.08,
+    "messages_usd_per_million_tiers": [[1000000000, 1.00], [5000000000, 0.80], [null, 0.70]],
+    "message_unit_bytes": 5120,
+    "rules_triggered_usd_per_million": 0.15,
+    "actions_usd_per_million": 0.15,
+    "shadow_ops_usd_per_million": 1.25
+  },
+  "aws_dynamodb": {
+    "source": "AWS Price List API, AmazonDynamoDB us-east-1, offer version 20260911124422 (on-demand)",
+    "verified": true,
+    "write_usd_per_million_wru": 0.625,
+    "read_usd_per_million_rru": 0.125,
+    "wru_bytes": 1024,
+    "rru_bytes_eventually_consistent": 8192,
+    "storage_usd_per_gb_month": 0.25,
+    "storage_free_gb": 25
+  },
+  "aws_firehose": {
+    "source": "AWS Price List API, AmazonKinesisFirehose us-east-1, offer version 20260911124446 (Direct PUT, tier 1)",
+    "verified": true,
+    "usd_per_gb": 0.029,
+    "min_record_bytes": 5120
+  },
+  "aws_s3": {
+    "source": "AWS Price List API, AmazonS3 us-east-1, offer version 20261015173540 (S3 Standard, first 50 TB)",
+    "verified": true,
+    "storage_usd_per_gb_month": 0.023,
+    "put_usd_per_1000": 0.005
+  },
+  "aws_ec2": {
+    "source": "AWS Price List API, AmazonEC2 us-east-1 (on-demand Linux, shared tenancy) and its EBS rows, read 2026-10-28",
+    "verified": true,
+    "instances_usd_per_hour": {"t4g.small": 0.0168, "t4g.medium": 0.0336, "m6g.large": 0.077},
+    "ebs_gp3_usd_per_gb_month": 0.08,
+    "snapshot_usd_per_gb_month": 0.05
+  },
+  "aws_data_transfer": {
+    "source": "aws.amazon.com/ec2/pricing/on-demand (data transfer out to the internet), from memory on 2026-10-28; verify",
+    "verified": false,
+    "egress_usd_per_gb": 0.09,
+    "free_gb_per_month": 100
+  },
+  "not_costed": [
+    "Firebase: Cloud Functions for the offline detector and notifications (free quota covers a small fleet), Authentication (free), the console",
+    "AWS: the scheduled Lambda that reads the status table for the offline detector, the API behind the app's chart (API Gateway or AppSync), CloudWatch, Route 53",
+    "self-hosted: the domain and TLS certificate (Let's Encrypt is free), the monitoring stack, and any second region"
+  ]
+}
