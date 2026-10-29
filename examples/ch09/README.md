@@ -6,7 +6,7 @@ python fleet.py health status_snapshot.json   # presence, versions, reboots, del
 python fleet.py synth --seed 7 --devices 60   # regenerate that snapshot (synthetic; the faults are planted)
 python fleet.py presence                      # four detectors of one silence over a day of Wi-Fi hiccups
 python fleet.py presence --keepalive-s 60     # a short keep-alive: the will fires sooner and lies more
-python fleet.py checks                        # ten candidate images through the device's eight checks
+python fleet.py checks                        # eleven candidate images through the device's eight checks
 python fleet.py keygen out/                   # an Ed25519 key pair; out/ is not committed
 python fleet.py sign manifest.json image.bin --key out/ota_signing.key
 python fleet.py verify manifest.signed.json image.bin --pub out/ota_signing.pub --running 1.4.0 --hw gh-rev-b
