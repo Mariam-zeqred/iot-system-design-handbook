@@ -45,12 +45,12 @@ import random
 import secrets
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 HERE = Path(__file__).parent
 DAY = 86400
-NOW_DEFAULT = int(datetime(2026, 10, 29, 12, 0, tzinfo=timezone.utc).timestamp())
+NOW_DEFAULT = int(datetime(2026, 10, 29, 12, 0, tzinfo=UTC).timestamp())
 
 
 def load(path: str | Path) -> dict:
@@ -59,7 +59,7 @@ def load(path: str | Path) -> dict:
 
 
 def iso(ts: float) -> str:
-    return datetime.fromtimestamp(int(ts), timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+    return datetime.fromtimestamp(int(ts), UTC).strftime("%Y-%m-%d %H:%M:%SZ")
 
 
 def human(seconds: float) -> str:
