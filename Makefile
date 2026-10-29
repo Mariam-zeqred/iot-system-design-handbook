@@ -15,6 +15,7 @@ test:
 	cd examples/ch06 && pytest -q
 	cd examples/ch07 && pytest -q
 	cd examples/ch08 && pytest -q
+	cd examples/ch09 && pytest -q
 
 # Each chapter's example must run from a clean checkout. Chapter 1's checker
 # exits 1 on purpose (N7 is left incomplete), so only its --markdown mode is
@@ -56,3 +57,10 @@ examples:
 	cd examples/ch08 && python cloud.py rules aws > /dev/null
 	cd examples/ch08 && python cloud.py rules mosquitto > /dev/null
 	cd examples/ch08 && python cloud.py rules map > /dev/null
+	cd examples/ch09 && python fleet.py signals signals.json > /dev/null
+	cd examples/ch09 && python fleet.py health status_snapshot.json > /dev/null
+	cd examples/ch09 && python fleet.py presence > /dev/null
+	cd examples/ch09 && python fleet.py checks > /dev/null
+	cd examples/ch09 && python fleet.py rollout > /dev/null
+	cd examples/ch09 && python fleet.py rollout --defect 0 > /dev/null
+	cd examples/ch09 && python fleet.py rollout --trials 100 > /dev/null

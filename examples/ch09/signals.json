@@ -1,0 +1,72 @@
+{
+  "levels": {
+    "native": "configuration shows it",
+    "add-on": "one more managed piece shows it",
+    "you build": "code you write and run shows it"
+  },
+  "signals": [
+    {
+      "signal": "status age per device",
+      "question": "which devices have been silent longer than N3's window, and since when",
+      "firebase": ["add-on", "the app computes age from status.ts for the device it shows; the fleet table needs a scheduled function over /devices/*/status"],
+      "aws": ["add-on", "Fleet Indexing on the shadow's reported ts and connectivity, or a scheduled Lambda over the latest-status table"],
+      "self": ["you build", "one SQL view: now() minus max(ts) per device, Grafana shows it"]
+    },
+    {
+      "signal": "last will",
+      "question": "did the broker lose this session without a clean DISCONNECT",
+      "firebase": ["you build", "there is no broker; onDisconnect writes exist for SDK clients, not for a REST device, so the device's own online flag cannot say false"],
+      "aws": ["native", "the will message on the MQTT session, delivered to subscribers and to a rule"],
+      "self": ["native", "the will message on the MQTT session, retained on a presence topic if you say so"]
+    },
+    {
+      "signal": "connect and disconnect events",
+      "question": "when did each session start and end, and why",
+      "firebase": ["you build", "none; the nearest is the device writing a boot record at start-up"],
+      "aws": ["native", "lifecycle events on $aws/events/presence/connected|disconnected/<clientId> with a disconnect reason"],
+      "self": ["add-on", "EMQX publishes client events; Mosquitto gives $SYS counts only, so per-client it is the will"]
+    },
+    {
+      "signal": "broker and database metrics",
+      "question": "connections, messages a second, refused logins, storage and download against the quota",
+      "firebase": ["native", "the console's usage graphs: connections, storage, downloads, load; no API for them on the free plan"],
+      "aws": ["native", "CloudWatch metrics per account: Connect.Success, Connect.AuthError, PublishIn.Success, RulesExecuted, plus DynamoDB and S3 metrics"],
+      "self": ["native", "$SYS/broker/# on Mosquitto, the EMQX dashboard, Postgres statistics; a scraper and Grafana to keep them"]
+    },
+    {
+      "signal": "firmware version inventory",
+      "question": "how many units run each version, and which ones the rollout has not reached",
+      "firebase": ["you build", "a function groups status.fw across /devices, or the app lists it; nothing aggregates for you"],
+      "aws": ["add-on", "Fleet Indexing on the shadow's reported fw, or the Jobs execution summary per version"],
+      "self": ["you build", "select fw, count(*) from latest group by fw"]
+    },
+    {
+      "signal": "reboots and their reasons",
+      "question": "which units restarted in the last day, after what (power, watchdog, panic, brownout), and which are looping",
+      "firebase": ["you build", "from the status record's up_s, rst and boots fields, which chapter 9 adds; nothing else sees a reboot"],
+      "aws": ["you build", "the same fields through the shadow or the status table; lifecycle events show a reconnect but not the reason"],
+      "self": ["you build", "the same fields; a reconnect is also visible as a will followed by a connect"]
+    },
+    {
+      "signal": "a device's log, on demand",
+      "question": "what did this unit print in the last hour",
+      "firebase": ["you build", "a command the device polls, and a path it writes the log to (the incubator's Send Log); a listener on that path would download it to every open app"],
+      "aws": ["add-on", "a Job or a command topic the device answers by uploading to S3 through a presigned URL"],
+      "self": ["you build", "a command topic and an HTTPS endpoint that accepts the upload"]
+    },
+    {
+      "signal": "OTA state per device and the rollout",
+      "question": "which version is each unit offered, downloading, running or has rejected, and how is the rollout going",
+      "firebase": ["you build", "a desired record per device and a state the device writes back (the incubator's /ota/state); the stages and the halt are a script"],
+      "aws": ["native", "IoT Jobs: an execution per thing with a status, a rollout rate that grows and an abort configuration that cancels at a failure threshold"],
+      "self": ["you build", "a retained desired topic per device, a state topic back, and a script for the stages"]
+    },
+    {
+      "signal": "alert on a fleet count",
+      "question": "tell someone when offline units pass 5 % or reboots pass ten an hour",
+      "firebase": ["add-on", "a scheduled function computes the count and sends a notification"],
+      "aws": ["add-on", "a CloudWatch alarm on a custom metric the Lambda publishes, or IoT Events"],
+      "self": ["add-on", "a Grafana alert rule on the SQL view"]
+    }
+  ]
+}
