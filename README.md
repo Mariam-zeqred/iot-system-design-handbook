@@ -17,7 +17,7 @@ Each chapter is 1 500–3 000 words with one worked example, 3–5 exercises (an
 | 7 | [Provisioning, identity and secrets](ch07-provisioning-identity-secrets.md) | Four questions every request must answer; an inventory of values with five home rules (a secret never lives in source or an image, a device holds only device-scoped secrets, people's passwords are per unit); what one credential is worth when a repo, an image, a unit, a router or the server is lost; least-privilege rules that spend the identity; the claim flow that gets a per-device token into NVS; rotation and revocation costed; TLS verification and signed images; the two real systems' eight gaps, named by their own READMEs, and the order to close them. |
 | 8 | [The cloud side](ch08-cloud-side.md) | Three shapes for the cloud side (a database the device writes to, a managed broker with managed stores, a broker and a time-series database you run) against twelve jobs the earlier chapters created; what each one bills (bytes, messages, machines and people); the farm monitor priced at 10 / 1 000 / 100 000 devices with every price's source and date; the listening phone as the hidden multiplier and where a listener is attached; chapter 7's rules table in three dialects; five selection rules in order; the two real systems on the free plan. |
 | 9 | [Observability and OTA](ch09-observability-and-ota.md) | Three questions about a unit you cannot touch and the four carriers that answer them (push counters, pull logs); four fields added to the status record (`up_s`, `rst`, `boots`, `heap_min`) and the five-line fleet table they allow; presence as a count of missed periods, with the MQTT last will as a clock and not a verdict (a day of Wi-Fi hiccups: 39 real outages, 2 954 raw will notifications); what each cloud shape shows of a fleet; a signed manifest and the eight checks a device makes before and after it flashes (strictly newer, hardware id, stepping stone, size, attempts, streamed digest, health window with bootloader rollback); a staged rollout with a halt rule that must withdraw the desired record (3 units exposed against 45 all at once); the two real systems' OTA paths read against the checks. |
-| 10 | Case study | *(not yet written)* the farm monitor end to end with every artefact. |
+| 10 | [Case study: the farm monitor end to end](ch10-case-study.md) | The brief, the never-list and its numbers, placement, streams, tasks, the farm's own safety layers (a heartbeat gate and a 30-minute hardware timer on the valve), links, identity, the cloud shape, the fleet table and a three-unit rollout, assembled into one design record that `examples/ch10/design.py dossier` generates by re-running the earlier chapters' tools; a bill of materials with assumed prices ($60.20 per greenhouse node against the brief's $150, $300.40 for the farm, 45.6 % of it the gateway); a three-year cost at 3 / 10 / 1 000 devices (hardware is 94 to 96 % of the total on the managed shapes, the three cloud shapes within eleven cents per device-month); and a traceability matrix from 23 decisions back to chapter 1's rows and the brief's lines, whose first run found the row nobody had claimed (B1). |
 
 ## The running example's data path
 
@@ -39,7 +39,7 @@ flowchart LR
     CL -. offline after 10 missed status writes .-> APP
 ```
 
-Each chapter adds one artefact to this picture; chapter 10 assembles them.
+Each chapter adds one artefact to this picture; chapter 10 assembles them (`python examples/ch10/design.py dossier` prints the whole record).
 
 ## What the streams look like (chapter 3)
 
@@ -108,6 +108,19 @@ USD a month, `examples/ch08/cloud.py cost`, chapter 3's records on chapter 6's n
 
 `examples/ch09/fleet.py presence`, a model of a day with three short Wi-Fi hiccups per device and one long outage per fifty device-days. `health` prints the five-line fleet table (presence per class window, versions and the units a rollout cannot reach, reboot reasons and loop suspects, delivery rate, minimum heap) from a synthetic snapshot the tool generates; `checks` runs eleven candidate images through the device's eight checks with an Ed25519-signed manifest; `rollout --trials 500` plays a bad image through 1 / 10 / 100 % stages (mean 3.3 units booted it, worst 56, against 45 all at once).
 
+## What the design costs (chapter 10)
+
+| devices | shape | hardware once | cloud 36 mo | operations 36 mo | total | per device-month |
+|---|---|---|---|---|---|---|
+| 3 (the brief's farm) | A Firebase RTDB | $300.40 | $0.00 (Spark) | $0.00 | $300.40 | $2.78 |
+| 10 | A Firebase RTDB | $687.40 | $0.00 (Spark) | $0.00 | $687.40 | $1.91 |
+| 10 | C self-hosted | $687.40 | $494.86 | $1 440.00 (2 h/mo) | $2 622.26 | $7.28 |
+| 1 000 | A Firebase RTDB | $59 130.40 | $3 841.71 | $0.00 | $62 972.11 | $1.75 |
+| 1 000 | B AWS IoT Core | $59 130.40 | $2 659.63 | $0.00 | $61 790.03 | $1.72 |
+| 1 000 | C self-hosted | $59 130.40 | $933.91 | $5 760.00 (8 h/mo) | $65 824.31 | $1.83 |
+
+`examples/ch10/design.py cost`: hardware from `bom.json` (every price an assumption, labelled), cloud from chapter 8's tool, operations at an assumed $20 an hour on chapter 8's hours. `trace` checks the 23 design decisions against chapter 1's rows and exits 1 on a gap; `dossier` prints the sixteen-section design record and the twelve-artefact hand-over checklist.
+
 ## Running the examples
 
 ```bash
@@ -119,7 +132,7 @@ Each `examples/chNN/` folder has its own README with the commands for that chapt
 
 ## Status and limitations
 
-- Chapters 1 to 9 are written; chapter 10 is planned (see the table above) and will be added last.
+- All ten chapters are written. The course is complete; corrections and the open items in `TODO.md` may still land.
 - Every number quoted from the two real systems comes from their READMEs, not from measurements made for this handbook; every number produced by an example script is labelled as such in the chapter.
 - The traffic figures in chapter 2 count payload, MQTT, TLS-record and LoRaWAN overhead only, not TCP/IP or radio framing, and their cost column is illustrative; chapter 8 prices the same streams with sourced prices.
 - The growth figures in chapter 3 count compact JSON bytes only, not database keys or indexes; chapter 8 adds a key per row and prices them, still as a floor.
@@ -130,6 +143,7 @@ Each `examples/chNN/` folder has its own README with the commands for that chapt
 - Chapter 7's inventory of the two real systems is built from their READMEs, secrets templates and the configuration files those name; no device, database or project was inspected, and no credential value appears anywhere in this handbook. Its `provision` tool is a model of the claim flow with HMAC-signed tokens, not Firebase's engine or a product; the rules table should be replayed in the Firebase emulator before anything is deployed. Its `rotate` figures are arithmetic on the fleet size, rollout and visit intervals passed in.
 - Chapter 8's bills are arithmetic on chapter 3's record sizes and rates: nothing was deployed, metered or invoiced. The AWS unit prices were read from the AWS Price List API (us-east-1) on 2026-10-28 and carry their offer versions; the Firebase Realtime Database and AWS data-transfer prices are written from memory because the sandbox could not reach the price pages, and `prices.json` marks them `"verified": false`. The phones' behaviour, the self-hosted instance sizes, the compression ratio and the operations hours are assumptions named in `fleet.json`; the three rules files `cloud.py rules` writes have not been run against their engines. What the chapter says about the two real systems' cloud side is quoted from their READMEs, architecture and data-contract documents.
 - Chapter 9's fleet snapshot is synthetic: `fleet.py synth` writes it from a seed with its faults planted at named devices, and the file's `_meta` says so; no fleet was observed. Its presence and rollout figures are models of schedules (outage distributions, poll and health windows, a defect share) with every parameter on the command line, not measurements of a broker or a fleet. Its Ed25519 is the RFC 8032 reference algorithm in Python integers, checked against the RFC's test vectors, for reading rather than for a device, which uses its SDK's verifier; no image was flashed. The incubator's OTA path and the poultry controller's heartbeat and OTA page are quoted from their READMEs, architecture and schema documents, and the statements about ESP-IDF's app rollback and Secure Boot V2, AWS IoT lifecycle events and Jobs abort configuration are from the author's reading of those products' documentation, not from a run.
+- Chapter 10's bill of materials carries assumed single-unit retail prices, not quotations, and no part was bought or tested; its cost table is chapter 8's arithmetic times 36 months plus that hardware, with the operations rate assumed; its traceability matrix is bookkeeping over the JSON files in this repository, which proves that each decision names a row, not that the row is answered well; and the farm monitor's valve layers (heartbeat gate, 30-minute hardware timer) are a design, not a built or measured circuit. Its statements about the two real systems' bills of materials and documents are quotations from their READMEs and `docs/` files.
 - Chapter 5's chamber model is the fit published in incubator-telemetry-analysis (one device, one day, door shut); everything above about 39 °C is an extrapolation of that linear fit, and the SSR, bimetal, gate and firmware in the simulation are models of the chapter's design, not measured parts. Its statements about what the two real systems lack (thermal cutout, fuse, pull-downs, a second series switch) are statements about their READMEs, not inspections of the hardware.
 
 ## Licence

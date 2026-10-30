@@ -1,0 +1,45 @@
+{
+  "_note": "Traceability for the farm monitor: every design decision of chapters 2-9 names the chapter-1 row (N1-N7) or brief line (B1-B5) it answers, and the file in this repository that holds the artefact. `design.py trace` reads the hazards from ../ch01/never_list.json, checks that every id cited exists, that every hazard is answered by at least one decision, that every critical hazard has a response on the device (chapter 4 or 5) and a bench test, and that every artefact path exists. It exits 1 on any gap.",
+  "brief": {
+    "B1": "measure air temperature and humidity in each greenhouse, soil moisture in the plot, the level of the irrigation tank",
+    "B2": "switch one fan per greenhouse and one irrigation valve, automatically within limits the farmer sets, and manually from the phone",
+    "B3": "live values and a week of history in an app; alert the farmer when something is wrong",
+    "B4": "mains at the greenhouses that cuts out several times a week; Wi-Fi covers the greenhouses; the plot is 200 m away",
+    "B5": "under 150 USD of hardware per greenhouse, no monthly bill that scares a smallholder"
+  },
+  "decisions": [
+    {"chapter": 1, "decision": "sensor period 15 s, status 60 s, offline after 10 misses, ±0.5 °C, 2 h local buffer", "traces_to": ["N2", "N3", "N6", "B3"], "artefact": "examples/ch01/never_list.json"},
+    {"chapter": 2, "decision": "every critical computation on the device; presence, forecast, cross-greenhouse analysis and push on the cloud; the outdoor reading shared by a local hop", "traces_to": ["N1", "N2", "N3", "N4", "N5", "B3"], "artefact": "examples/ch02/computations.json"},
+    {"chapter": 2, "decision": "path B for the greenhouse nodes (status + 10-min history + events), path C for the plot node (11-byte frame)", "traces_to": ["N3", "N6", "B4", "B5"], "artefact": "examples/ch02/paths.json"},
+    {"chapter": 3, "decision": "status overwrite, history append with min/mean/max, events append with id = dev-ts-type, settings desired/reported with a version", "traces_to": ["N5", "N6", "B3"], "artefact": "examples/ch03/streams.json"},
+    {"chapter": 3, "decision": "field table: t (°C), h (%), soil (%), tank (%) with unit and physical range in the schema; null for 'could not read', never a sentinel; schema and fw in every record; readers migrate on read", "traces_to": ["B1", "N2"], "artefact": "examples/ch03/telemetry.py"},
+    {"chapter": 3, "decision": "settings clamped on the device, the clamped value reported back with the version", "traces_to": ["N5", "B2"], "artefact": "examples/ch03/samples/settings_desired.json"},
+    {"chapter": 4, "decision": "six tasks by rate; the safety task alone calls the interlock and feeds the watchdog; comms on core 0 and never in the safety path", "traces_to": ["N1", "N2", "N4"], "artefact": "examples/ch04/firmware_sim.py", "device_side": true},
+    {"chapter": 4, "decision": "safe states: fan on, valve closed; pull-down on every relay pin; safe states driven before any sensor or radio is initialised", "traces_to": ["N4", "N1"], "artefact": "examples/ch04/firmware_sim.py", "device_side": true, "test": "bench: power up with the sensor unplugged; both relays must stay in their safe state and the LCD must say why"},
+    {"chapter": 4, "decision": "watchdog fed by the safety task only, 5 s timeout, 22 s of 30 used with boot and the first reading", "traces_to": ["N1", "N4"], "artefact": "examples/ch04/firmware_sim.py", "device_side": true, "test": "bench: stall the safety task with a debug command; the chip must reset within 5 s and come back in the safe state"},
+    {"chapter": 4, "decision": "events through a queue to an outbox; status dropped when stale; history and events replayed in order", "traces_to": ["N6"], "artefact": "examples/ch04/firmware_sim.py", "device_side": true},
+    {"chapter": 5, "decision": "heartbeat gate: a second relay in series with the valve, held by a 3 s retriggerable monostable the safety task pulses", "traces_to": ["N1", "N4"], "artefact": "examples/ch05/layers.json", "device_side": true, "test": "bench: hold the MCU in reset with the valve commanded open; the gate relay must drop within 3 s"},
+    {"chapter": 5, "decision": "hardware max-on timer on the valve (30 min), independent of the MCU; a shorted valve relay is detected by the tank level falling while the valve is commanded closed", "traces_to": ["N1"], "artefact": "examples/ch05/layers.py", "device_side": true, "test": "bench: short the valve relay; the firmware must declare the fault from the level trend and the timer must drop the series relay at 30 min regardless"},
+    {"chapter": 5, "decision": "accepted: a fan stuck off is a repair call raised by the alert path, not a hazard to people; no hardware layer", "traces_to": ["N3", "B3"], "artefact": "examples/ch05/layers.py"},
+    {"chapter": 6, "decision": "greenhouse nodes on Wi-Fi; plot node on LoRaWAN class A at SF8 through one gateway; cellular excluded by X5 and by cost", "traces_to": ["B4", "B5"], "artefact": "examples/ch06/nodes.json"},
+    {"chapter": 6, "decision": "comms contract: connect in stages with timeouts, clock before TLS, full-jitter backoff capped at 300 s, outbox per stream, presence judged in the cloud", "traces_to": ["N3", "N6", "B4"], "artefact": "examples/ch06/link.py"},
+    {"chapter": 7, "decision": "per-device custom token in NVS minted by the claim flow; owner's session is the authority; per-unit hotspot password on the label; rules confine each device to its own path with shape checks", "traces_to": ["N7", "N5"], "artefact": "examples/ch07/inventory.json"},
+    {"chapter": 7, "decision": "TLS roots pinned; the token-signing key and the OTA private key live on one server; identity.py scan in CI", "traces_to": ["N7"], "artefact": "examples/ch07/identity.py"},
+    {"chapter": 8, "decision": "shape A (Firebase RTDB) on the Spark plan at the brief's size: $0 a month; the two 'you build' rows (nightly export, signed OTA) written before launch; the migration to shape B keeps the records and the comms contract", "traces_to": ["B5", "B3"], "artefact": "examples/ch08/fleet.json"},
+    {"chapter": 8, "decision": "listeners on /status only; charts by indexed limitToLast query; history older than 30 days exported nightly to a bucket", "traces_to": ["B3", "B5"], "artefact": "examples/ch08/cloud.py"},
+    {"chapter": 9, "decision": "up_s, rst, boots, heap_min in the status record; the fleet table's five lines; alerts on counts (offline > 5 %, any loop suspect, any unit under the heap floor)", "traces_to": ["N3", "B3"], "artefact": "examples/ch09/status_snapshot.json"},
+    {"chapter": 9, "decision": "presence = status age over 10 misses per class (600 s greenhouse, 6 000 s plot), judged in the cloud; no device-written online flag", "traces_to": ["N3"], "artefact": "examples/ch09/fleet.py"},
+    {"chapter": 9, "decision": "signed manifest, eight checks, pending-valid boot with rollback; rollout one greenhouse node first with an hour's soak, then the rest; the plot node is updated by a visit (no FUOTA)", "traces_to": ["N7", "N1", "N4"], "artefact": "examples/ch09/fleet.py", "device_side": true, "test": "bench: flash an image whose sensor driver is broken; the unit must roll back to the old image within the health window with both relays in their safe state"},
+    {"chapter": 10, "decision": "bill of materials under the brief's budget; three-year cost at the brief's size and at 10 / 1 000 devices with every price's source", "traces_to": ["B5", "B1"], "artefact": "examples/ch10/bom.json"}
+  ],
+  "hazard_tests": {
+    "_note": "Chapter 1's field 8 (one bench test per hazard), as the acceptance list for the first unit. The N7 test is the rules scenario table of chapter 7 replayed in the emulator.",
+    "N1": "short the valve relay driver on; the gate or the timer must close the valve within its bound and the fault must latch",
+    "N2": "unplug the SHT31; after three periods both actuators must be in their safe state and the buzzer must sound",
+    "N3": "pull the router's power; the app must show the unit offline after 10 minutes and not before",
+    "N4": "power-cycle with the sensor unplugged; no relay may click before the LCD shows the safe state",
+    "N5": "type 99 °C into the app; the device must report the clamped value and the version",
+    "N6": "pull the router for 30 minutes; the history chart must have no gap after reconnection",
+    "N7": "replay chapter 7's fourteen scenarios in the rules emulator; device A must never write device B's path"
+  }
+}

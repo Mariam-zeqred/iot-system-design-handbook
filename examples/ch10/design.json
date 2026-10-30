@@ -1,0 +1,86 @@
+{
+  "_note": "The farm monitor's design record: the artefacts chapters 1-9 handed over, in one file, in the form `design.py dossier` prints. Tables that an earlier chapter's tool produces (never-list, placement, growth, link selection, inventory, bill) are not copied here; the dossier runs those tools on their own JSON. What is here is what no earlier tool prints: the quality numbers, the stream and task tables as decided, the farm monitor's own safety layers (chapter 5's example was the incubator), the fleet and rollout parameters, and the hand-over checklist with the file that holds each artefact.",
+  "name": "farm monitor",
+  "nodes": [
+    {"id": "gh1", "class": "greenhouse node", "power": "mains", "link": "Wi-Fi, HTTPS on a kept TLS session + SSE on settings/desired", "senses": "air temperature, humidity", "switches": "fan (via contactor), valve"},
+    {"id": "gh2", "class": "greenhouse node", "power": "mains", "link": "same", "senses": "air temperature, humidity", "switches": "fan (via contactor)"},
+    {"id": "plot", "class": "plot node", "power": "18650, 2 000 mAh", "link": "LoRaWAN class A, SF8, 11-byte frame every 10 min", "senses": "soil moisture, tank level", "switches": "nothing"},
+    {"id": "gw", "class": "gateway", "power": "mains at greenhouse 1", "link": "LoRaWAN to the plot node, Wi-Fi to the router", "senses": "nothing (translates frames into records; shares the outdoor reading by a local hop)", "switches": "nothing"}
+  ],
+  "quality": [
+    {"requirement": "sensor period", "value": "15 s", "from": "N2: three missed periods is a 45 s detection delay"},
+    {"requirement": "status write", "value": "every 60 s (greenhouse), every 10 min (plot)", "from": "N3: ten misses before offline keeps false alarms rare"},
+    {"requirement": "offline threshold", "value": "10 misses: 600 s greenhouse, 6 000 s plot", "from": "N3 and brief B4"},
+    {"requirement": "temperature accuracy", "value": "±0.5 °C", "from": "fan thresholds are whole degrees"},
+    {"requirement": "local buffer", "value": "2 h at 15 s = 480 readings", "from": "N6: outages are minutes, not days"},
+    {"requirement": "history retention", "value": "30 days hot in the database, 2 years in a bucket", "from": "brief B3 (a week) and chapter 8's storage line"},
+    {"requirement": "hardware cost", "value": "under 150 USD per greenhouse", "from": "brief B5"},
+    {"requirement": "cloud bill", "value": "$0 at the brief's size", "from": "brief B5, chapter 8 K4"}
+  ],
+  "streams": [
+    {"stream": "status", "writer": "device", "mode": "overwrite every 60 s (plot: 10 min)", "key": "device", "kept": "latest only", "fields": "schema dev ts t h soil tank fan valve rssi fw seq up_s rst boots heap_min"},
+    {"stream": "history", "writer": "device", "mode": "append every 10 min, min/mean/max", "key": "device + ts", "kept": "30 d in the database, 2 y in the bucket"},
+    {"stream": "events", "writer": "device (app acknowledges)", "mode": "append, id = dev-ts-type", "key": "id", "kept": "forever"},
+    {"stream": "settings desired / reported", "writer": "app / device", "mode": "overwrite, version echoed, clamped on the device", "key": "device", "kept": "latest only"},
+    {"stream": "ota desired / state", "writer": "operator / device", "mode": "overwrite; manifest URL and version / download, flashing, pending, valid, rolled back", "key": "device", "kept": "latest only"}
+  ],
+  "tasks": [
+    {"task": "sensor", "period": "15 s", "core": 1, "blocks": "no", "watchdog": "no", "writes": "readings, sample_ts, seq", "from": "N2"},
+    {"task": "safety", "period": "100 ms", "core": 1, "blocks": "no", "watchdog": "yes, 5 s", "writes": "fan, valve, fault; pulses the gate; the only caller of the interlock", "from": "N1 N2 N4"},
+    {"task": "control", "period": "1 s", "core": 1, "blocks": "no", "watchdog": "no", "writes": "req_fan, req_valve", "from": "B2"},
+    {"task": "display", "period": "200 ms", "core": 1, "blocks": "no", "watchdog": "no", "writes": "nothing shared", "from": "ch2 R4"},
+    {"task": "datalog", "period": "600 s", "core": 1, "blocks": "SD", "watchdog": "no", "writes": "history outbox", "from": "N6"},
+    {"task": "comms", "period": "60 s", "core": 0, "blocks": "network", "watchdog": "no", "writes": "link_ok, rssi, link_stage", "from": "N3 N6"}
+  ],
+  "safe_states": [
+    {"actuator": "fan", "safe": "on", "why": "a fan running for no reason costs electricity; a greenhouse without one overheats"},
+    {"actuator": "valve", "safe": "closed", "why": "a valve open for no reason floods a plot and empties the tank"}
+  ],
+  "layers": [
+    {"layer": "control + interlock (firmware)", "senses": "the sensor; the tank level trend", "acts_through": "firmware → relay", "catches": "what the firmware can see: limits, max on-time 30 min, a sensor that lies by range or staleness", "response": "1 s"},
+    {"layer": "watchdog + pull-down", "senses": "the safety task's silence", "acts_through": "a reset; the pin held low", "catches": "a hung MCU", "response": "5 s + 2 s boot"},
+    {"layer": "heartbeat gate", "senses": "silence, or a fault the firmware declared (it stops pulsing)", "acts_through": "a second relay in series with the valve", "catches": "a hung MCU, a shorted valve relay once the firmware sees the level fall", "response": "3 s"},
+    {"layer": "hardware max-on timer", "senses": "time, directly", "acts_through": "the same series relay", "catches": "a shorted valve relay the firmware never notices", "response": "30 min"},
+    {"layer": "a person", "senses": "the buzzer; the app's offline and fault alerts (N3)", "acts_through": "hands", "catches": "power loss (both safe states hold: the fan contactor drops, the valve closes), a fan stuck off", "response": "minutes to an hour"}
+  ],
+  "accepted": [
+    {"failure": "fan relay or contactor stuck off", "why": "not a hazard to people; the firmware sees the temperature rise with the fan commanded on, declares a fault, and the alert path raises a repair call"},
+    {"failure": "power loss", "why": "both actuators fall to their safe state without firmware: the contactor drops and the valve closes; only N3 remains, and the app shows the unit offline after 10 minutes"}
+  ],
+  "cloud": {
+    "shape": "A: Firebase Realtime Database, Spark plan",
+    "why": "chapter 8 K1-K5 at the brief's size: $0 a month, no operator, two 'you build' rows",
+    "you_build": ["nightly export of history older than 30 days to a bucket", "signed OTA manifest and the rollout script (chapter 9)"],
+    "listeners": "on /devices/<id>/status only; charts by an indexed limitToLast query on /history",
+    "identity": "per-device custom token in NVS from chapter 7's claim flow; rules confine each device to its own path with shape checks",
+    "presence": "status age over 10 misses per class, judged by a scheduled function; there is no last will on shape A",
+    "migration": "to shape B when K1 or the bill says so: the records (chapter 3) and the comms contract (chapter 6) do not change; the transport becomes MQTT on a kept session and presence gains the last will as a faster clock"
+  },
+  "fleet": {
+    "status_fields_added": ["up_s", "rst", "boots", "heap_min"],
+    "table_lines": ["presence per class window", "firmware versions and the units a rollout cannot reach", "reboots by reason and loop suspects", "delivery rate and weak links", "minimum heap"],
+    "alerts": ["offline above 5 % of the fleet (at the brief's size: any unit)", "any loop suspect", "any unit under the 20 kB heap floor"],
+    "heap_floor_kb": 20
+  },
+  "rollout": {
+    "signing": "Ed25519 private key on the operator's laptop; public key compiled into every image; manifest with the eight fields of chapter 9",
+    "stages": "gh2 first (one unit), soak one hour while the fleet table is read per version, then gh1 and the gateway",
+    "halt": "any rollback halts and withdraws the desired record (with a first stage of one unit, the halt rate is 1 over 1)",
+    "plot_node": "no over-the-air update over LoRaWAN (FUOTA is out of this handbook's scope); the plot node is reflashed by cable at a site visit, so its image must be the most conservative one",
+    "health_window_s": 180
+  },
+  "handover": [
+    {"chapter": 1, "artefact": "the brief, unedited", "file": "ch01-requirements-and-failure-modes.md"},
+    {"chapter": 1, "artefact": "the never-list as JSON with the checker at zero gaps for N1-N6 (N7 closed by chapter 7)", "file": "examples/ch01/never_list.json"},
+    {"chapter": 2, "artefact": "the computation list and the decision table", "file": "examples/ch02/computations.json"},
+    {"chapter": 2, "artefact": "the traffic table for the candidate paths", "file": "examples/ch02/paths.json"},
+    {"chapter": 3, "artefact": "the stream table, the settings contract, the growth table, migration code and sample records", "file": "examples/ch03/streams.json"},
+    {"chapter": 4, "artefact": "the task table, ownership table, safe states, interlock truth table, boot order, watchdog policy", "file": "examples/ch04/firmware_sim.py"},
+    {"chapter": 5, "artefact": "the layer table, energy-path diagram, sizing sheet, one bench test per layer, the accepted rows", "file": "examples/ch05/layers.py"},
+    {"chapter": 6, "artefact": "the link table per node, airtime and energy sheets, the comms contract", "file": "examples/ch06/nodes.json"},
+    {"chapter": 7, "artefact": "the inventory at zero gaps, the credential design, the rules file and scenarios, the claim flow, the rotation runbook", "file": "examples/ch07/inventory.json"},
+    {"chapter": 8, "artefact": "the fit table, the bill with sources, the listener rule, the rules file in the chosen dialect", "file": "examples/ch08/fleet.json"},
+    {"chapter": 9, "artefact": "the health fields, the fleet table queries, the presence rule, the manifest schema and eight checks, the rollout plan", "file": "examples/ch09/fleet.py"},
+    {"chapter": 10, "artefact": "the bill of materials, the traceability matrix, the three-year cost", "file": "examples/ch10/bom.json"}
+  ]
+}

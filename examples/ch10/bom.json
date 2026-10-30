@@ -1,0 +1,57 @@
+{
+  "_note": "Bill of materials for the farm monitor of chapters 1-9. Every unit price is an ASSUMPTION: a typical single-unit retail price in USD in 2026, rounded, not a quotation; the `source` field says so per line. The brief's budget line is `budget_usd` per class. The fan and the valve are the farm's own loads; the node switches them, so only a contactor allowance appears here.",
+  "classes": [
+    {
+      "id": "gh",
+      "name": "greenhouse node",
+      "budget_usd": 150,
+      "budget_from": "brief B5: under 150 USD of hardware per greenhouse",
+      "parts": [
+        {"part": "ESP32-WROOM-32 DevKit (4 MB flash, two app slots for OTA)", "qty": 1, "unit_usd": 6.0, "why": "six tasks on FreeRTOS (ch4), Wi-Fi (ch6), two OTA slots (ch9)", "source": "assumption"},
+        {"part": "SHT31 temperature/humidity breakout, ±0.3 °C", "qty": 1, "unit_usd": 7.0, "why": "±0.5 °C requirement (ch1); own I2C bus so the display never delays a reading (ch4)", "source": "assumption"},
+        {"part": "2-channel 10 A relay module, opto-isolated, active-HIGH", "qty": 1, "unit_usd": 3.0, "why": "fan contactor coil and valve; active-high so a pull-down means off (N4)", "source": "assumption"},
+        {"part": "10 kΩ pull-down resistors on the relay driver pins", "qty": 2, "unit_usd": 0.1, "why": "the relay is off before the first instruction (N4, ch4 boot order)", "source": "assumption"},
+        {"part": "heartbeat gate: retriggerable monostable (CD4538) + second relay in series with the valve", "qty": 1, "unit_usd": 4.0, "why": "the valve closes when the safety task stops pulsing: a hung MCU or a declared fault (ch5 layer 3)", "source": "assumption"},
+        {"part": "hardware max-on timer for the valve (second monostable, 30 min)", "qty": 1, "unit_usd": 2.0, "why": "a shorted valve relay cannot flood for longer than 30 min without the firmware re-arming the timer (ch5 layer 4, N1 valve row)", "source": "assumption"},
+        {"part": "contactor sized to the fan (electrician's part, allowance)", "qty": 1, "unit_usd": 10.0, "why": "the relay module switches a coil, never the fan's current (poultry HARDWARE.md says the same)", "source": "assumption"},
+        {"part": "piezo buzzer", "qty": 1, "unit_usd": 1.0, "why": "N1's local response and N2's error alarm do not depend on the network", "source": "assumption"},
+        {"part": "16x2 LCD with I2C backpack", "qty": 1, "unit_usd": 4.0, "why": "the display computation is on the device (ch2 R4)", "source": "assumption"},
+        {"part": "micro-SD module and 4 GB card", "qty": 1, "unit_usd": 4.0, "why": "history outbox for N6 (2 h at 15 s is 480 readings) and the log a person pulls once (ch9)", "source": "assumption"},
+        {"part": "5 V 2 A supply with a fused IEC inlet", "qty": 1, "unit_usd": 6.0, "why": "mains at the greenhouse (brief B4); the fuse is the first layer of the energy path (ch5)", "source": "assumption"},
+        {"part": "IP65 enclosure with cable glands", "qty": 1, "unit_usd": 8.0, "why": "a greenhouse is wet; the relays and the mains side stay behind a lid", "source": "assumption"},
+        {"part": "perfboard, screw terminals, wire, label", "qty": 1, "unit_usd": 5.0, "why": "the label carries the device id and the per-unit hotspot password (ch7 H5)", "source": "assumption"}
+      ]
+    },
+    {
+      "id": "plot",
+      "name": "plot node",
+      "budget_usd": null,
+      "budget_from": "no line in the brief; the greenhouse budget is the yardstick",
+      "parts": [
+        {"part": "ESP32 + SX1276 LoRa board with 868 MHz antenna", "qty": 1, "unit_usd": 18.0, "why": "200 m is out of Wi-Fi reach (ch6 X1); LoRaWAN class A at SF8", "source": "assumption"},
+        {"part": "capacitive soil-moisture probe", "qty": 1, "unit_usd": 3.0, "why": "soil moisture in the plot (brief B1); a resistive probe corrodes in a season", "source": "assumption"},
+        {"part": "waterproof ultrasonic level sensor (JSN-SR04T)", "qty": 1, "unit_usd": 6.0, "why": "tank level in the plot (brief B1)", "source": "assumption"},
+        {"part": "18650 cell 2 000 mAh with holder and protection", "qty": 1, "unit_usd": 5.0, "why": "ch6's battery budget: 1.16 mAh/day at SF8, about 3.3 years on 0.7 of the nameplate", "source": "assumption"},
+        {"part": "IP65 enclosure, mast clamp, glands", "qty": 1, "unit_usd": 8.0, "why": "outdoors all year", "source": "assumption"},
+        {"part": "perfboard, terminals, wire, label", "qty": 1, "unit_usd": 3.0, "why": "label as above", "source": "assumption"}
+      ]
+    },
+    {
+      "id": "gw",
+      "name": "LoRaWAN gateway (one per farm, at greenhouse 1)",
+      "budget_usd": null,
+      "budget_from": "no line in the brief; it is the plot node's cost of reach (ch6)",
+      "parts": [
+        {"part": "8-channel indoor LoRaWAN gateway with Wi-Fi backhaul", "qty": 1, "unit_usd": 120.0, "why": "translates the plot node's 11-byte frames into chapter 3's records and forwards them over the farm Wi-Fi (ch2, ch6)", "source": "assumption"},
+        {"part": "outdoor 868 MHz antenna and cable", "qty": 1, "unit_usd": 12.0, "why": "200 m to the plot through a greenhouse wall", "source": "assumption"},
+        {"part": "5 V supply", "qty": 1, "unit_usd": 5.0, "why": "mains at greenhouse 1; its power supply is on the never-list (ch6 hand-over 5)", "source": "assumption"}
+      ]
+    }
+  ],
+  "farm": {
+    "_note": "The brief's farm: two greenhouse nodes, one plot node, one gateway; the farm's own Wi-Fi router is already there (brief B4).",
+    "counts": {"gh": 2, "plot": 1, "gw": 1}
+  },
+  "operations_usd_per_hour": {"value": 20.0, "source": "assumption: what an hour of a part-time operator costs the cooperative; the hours themselves come from chapter 8's fleet.json"},
+  "horizon_months": 36
+}
