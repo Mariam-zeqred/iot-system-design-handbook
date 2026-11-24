@@ -19,7 +19,7 @@ part) or `blind` (does not sense that signal).
 
 `run` and `compare` put a heater on the queen-bee incubator's fitted chamber
 model, taken from
-[incubator-telemetry-analysis](https://github.com/Mariam-zeqred/incubator-telemetry-analysis)
+the `incubator-telemetry-analysis` repository (private since 2026-11-21),
 `figures/model_params.json` (second-order physical branch: heater gain
 0.5908 °C/min, heater lag 4.92 min, loss coefficient 0.0111 /min; one device,
 one day, door shut, ambient 27.2–28.3 °C). The firmware (hysteresis control,

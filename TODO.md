@@ -53,3 +53,7 @@
 - ch10 says N3's detector on shape A is "a scheduled job ... which chapter 8 left uncosted"; whether that job can run on the Spark plan or needs Blaze depends on Firebase's current Cloud Functions terms, which the sandbox could not fetch. Check before quoting it.
 - ch10's statement that the plot node gets no over-the-air update is a scope decision (FUOTA out of this handbook); LoRaWAN FUOTA exists (fragmentation and multicast specifications from the LoRa Alliance) and would be the chapter 9 extension if plot nodes multiply.
 - The real-system quotations in ch10 section 10 were checked against fresh read-only clones of both repos on 2026-10-30 (incubator README "Hardware" table and security note; poultry `docs/HARDWARE.md` bill of materials, README security notes).
+
+## Added by the review of 2026-11-24
+
+- **Decide whether the copied incubator material stays in this public repo.** Its source repository, `incubator-telemetry-analysis`, was made private on 2026-11-21 (the links here now say so), but the fitted incubator thermal-model parameters quoted in `ch05-safety-layers.md` and `examples/ch05/` remain public here. Keeping, replacing with synthetic data or removing them is Mariam's decision, not a session's: removal would also mean rewriting history, and the README's "real data" statements would have to change with it.
